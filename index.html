@@ -1,0 +1,2942 @@
+
+<style>
+:root{--bg:#ffffff;--s:#f5f5f5;--s2:#ebebeb;--b:#d0d0d0;--a:#5a8a00;--t:#111111;--tm:#555;--td:#777;--red:#cc2222;--amb:#b07800;--grn:#1a7a3a;--r:6px}
+*{box-sizing:border-box;margin:0;padding:0}
+#app{background:var(--bg);color:var(--t);min-height:400px;font-family:'DM Sans',sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--b);background:var(--s)}
+.logo{font-size:18px;font-weight:700;letter-spacing:3px;color:var(--a);font-family:monospace}
+.logo span{color:var(--tm);font-size:11px;margin-left:8px;letter-spacing:1px}
+.hright{display:flex;align-items:center;gap:8px}
+.sync{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tm);font-family:monospace}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--tm);flex-shrink:0}
+.dot.syn{background:var(--amb);animation:pulse 1s infinite}
+.dot.ok{background:var(--grn)}
+.dot.err{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.btn{background:var(--a);color:#0e0e0f;border:none;padding:6px 14px;border-radius:var(--r);font-weight:600;font-size:12px;cursor:pointer;letter-spacing:.5px}
+.btn:hover{opacity:.85}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.sec{background:var(--s2);color:var(--t);border:1px solid var(--b)}
+.btn.sec:hover{border-color:var(--a);color:var(--a)}
+.btn.ghost{background:none;color:var(--tm);border:1px solid var(--b)}
+.btn.ghost:hover{color:var(--t);border-color:var(--td)}
+select,input{background:var(--s2);border:1px solid var(--b);color:var(--t);padding:6px 10px;border-radius:var(--r);font-size:12px;font-family:monospace;outline:none}
+select:focus,input:focus{border-color:var(--a)}
+select option{background:var(--s2)}
+.cbar{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid var(--b);background:var(--s);flex-wrap:wrap}
+.clabel{font-size:11px;color:var(--tm);text-transform:uppercase;letter-spacing:1px;font-family:monospace}
+.toolbar{display:flex;align-items:center;gap:8px;padding:8px 20px;border-bottom:1px solid var(--b);background:var(--s);flex-wrap:wrap}
+.vtoggle{display:flex;background:var(--s2);border:1px solid var(--b);border-radius:var(--r);overflow:hidden}
+.vtoggle button{background:none;border:none;color:var(--tm);padding:5px 12px;font-size:12px;cursor:pointer}
+.vtoggle button.active{background:var(--a);color:#0e0e0f;font-weight:600}
+.sp{flex:1}.rc{font-size:11px;color:var(--tm);font-family:monospace}
+main{padding:0;overflow:hidden}
+.setup{max-width:460px;margin:40px auto;background:var(--s);border:1px solid var(--b);border-radius:10px;padding:32px}
+.setup h2{font-size:22px;font-weight:700;letter-spacing:2px;color:var(--a);margin-bottom:4px;font-family:monospace}
+.setup p{color:var(--tm);font-size:12px;margin-bottom:22px;line-height:1.6}
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;font-family:monospace}
+.fg input{width:100%;padding:9px 12px;font-size:13px}
+.setup .btn{width:100%;padding:10px;font-size:13px;margin-top:6px}
+.errmsg{color:var(--red);font-size:11px;font-family:monospace;margin-top:8px}
+
+/* CANVAS */
+#canvasWrap{width:100%;height:calc(100vh - 130px);overflow:hidden;position:relative;background:var(--s2);cursor:default}
+#canvas{position:absolute;top:0;left:0;transform-origin:0 0}
+
+/* CARD on canvas */
+.card{position:absolute;background:#ffffff;border:1px solid var(--b);border-radius:8px;overflow:hidden;cursor:grab;width:200px;user-select:none;transition:border-color .15s,box-shadow .15s}
+.card:hover{border-color:var(--a)}
+.card.dragging{cursor:grabbing;box-shadow:0 8px 32px rgba(0,0,0,.5);border-color:var(--a);z-index:9999!important}
+.csbar{position:absolute;top:0;left:0;right:0;height:3px;z-index:1}
+.csbar.red{background:var(--red)}.csbar.amber{background:var(--amb)}.csbar.green{background:var(--grn)}
+.cimg{width:100%;height:300px;background:var(--s2);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.cimg img{width:100%;height:100%;object-fit:contain;display:block}
+.cimg .noimg{font-size:10px;color:var(--tm);text-align:center}
+.cbody{padding:8px 10px}
+.cname{font-size:11px;font-weight:500;line-height:1.3;margin-bottom:5px;color:var(--t);text-align:center}
+.cmeta{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+.badge{font-size:10px;padding:2px 6px;border-radius:20px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;font-family:monospace}
+.badge.red{background:rgba(255,69,69,.15);color:var(--red)}
+.badge.amber{background:rgba(255,184,48,.15);color:var(--amb)}
+.badge.green{background:rgba(77,255,145,.15);color:var(--grn)}
+.badge.neutral{background:var(--s2);color:var(--tm)}
+
+/* TABLE VIEW */
+.twrap{position:relative;border:1px solid var(--b);border-radius:8px;margin:20px;display:flex;flex-direction:column;max-height:calc(100vh - 160px)}
+.twrap-scroll{overflow:auto;flex:1}
+.twrap-hscroll{height:14px;overflow-x:auto;overflow-y:hidden;border-top:1px solid var(--b);flex-shrink:0}
+.twrap-hscroll-inner{height:1px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead tr{background:var(--s2);border-bottom:1px solid var(--b)}
+thead{position:sticky;top:0;z-index:10}
+th{padding:8px 10px;text-align:left;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--tm);white-space:nowrap;font-family:monospace;cursor:pointer;user-select:none;position:relative;background:var(--s2)}
+th:hover{color:var(--t)}
+th .sort-arrow{margin-left:4px;opacity:.4;font-size:9px}
+th.sorted .sort-arrow{opacity:1;color:var(--a)}
+th.sorted{color:var(--a)}
+tbody tr{border-bottom:1px solid var(--b);cursor:pointer;transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--s2)}
+td{padding:8px 10px;vertical-align:middle;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thumb{width:32px;height:42px;border-radius:3px;background:var(--s2);display:inline-flex;align-items:center;justify-content:center;overflow:hidden;vertical-align:middle}
+.thumb img{width:32px;height:42px;object-fit:cover}
+/* SKU group — full outline via per-cell borders (border-collapse:collapse shares borders) */
+/* master row */
+tr.sku-master{background:var(--s2)}
+tr.sku-master td{font-weight:600;color:var(--t);border-top:2px solid var(--a);border-bottom:1px solid var(--b)}
+tr.sku-master td:first-child{border-left:2px solid var(--a)}
+tr.sku-master td:last-child{border-right:2px solid var(--a)}
+tr.sku-master td.sku-toggle-cell{cursor:pointer;user-select:none;padding-left:6px}
+tr.sku-master td.sku-toggle-cell::before{content:'▾';font-size:11px;color:var(--a);display:inline-block;width:14px;transition:transform .15s}
+tr.sku-master.collapsed td.sku-toggle-cell::before{content:'▸'}
+/* collapsed master gets bottom border too to close the box */
+tr.sku-master.collapsed td{border-bottom:2px solid var(--a)}
+/* child rows */
+tr.sku-child{background:var(--bg)}
+tr.sku-child:hover{background:var(--s)}
+tr.sku-child.hidden{display:none}
+tr.sku-child td{font-size:11px;padding-top:6px;padding-bottom:6px;border-bottom:1px dashed var(--b)}
+tr.sku-child td:first-child{border-left:2px solid var(--a);padding-left:28px}
+tr.sku-child td:last-child{border-right:2px solid var(--a)}
+/* last child closes the bottom of the group box */
+tr.sku-child.sku-last-child td{border-bottom:2px solid var(--a)}
+/* dim shared (unchanged) cells in children */
+td.cell-shared{color:var(--b);font-size:10px}
+td.cell-shared span.badge{opacity:.25}
+/* variant cells stand out */
+td.cell-varies{color:var(--t);font-weight:500}
+.sku-badge{font-size:9px;padding:1px 5px;border-radius:10px;background:rgba(90,138,0,.15);color:var(--a);font-family:monospace;margin-left:4px;vertical-align:middle}
+
+/* IMAGE LIGHTBOX / UPLOAD MODAL */
+.imgmodal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:800;display:none;align-items:center;justify-content:center}
+.imgmodal-overlay.open{display:flex}
+.imgmodal{background:var(--s);border:1px solid var(--b);border-radius:12px;width:520px;max-width:calc(100vw - 40px);max-height:calc(100vh - 40px);display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.6);animation:fadeUp .18s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.imgmodal-header{padding:14px 18px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between}
+.imgmodal-header h4{font-size:13px;font-weight:700;letter-spacing:2px;color:var(--a);font-family:monospace;margin:0}
+.imgmodal-body{padding:18px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
+.imgmodal-preview{display:flex;align-items:center;justify-content:center;background:var(--s2);border:1px solid var(--b);border-radius:8px;min-height:200px;max-height:340px;overflow:hidden;position:relative}
+.imgmodal-preview img{max-width:100%;max-height:340px;object-fit:contain;display:block}
+.imgmodal-noimg{color:var(--tm);font-size:12px;font-family:monospace;text-align:center;padding:40px}
+.imgmodal-delete{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:monospace;letter-spacing:.5px}
+.imgmodal-delete:hover{background:var(--red);border-color:var(--red)}
+.imgmodal-dropzone{border:2px dashed var(--b);border-radius:8px;padding:28px 20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;position:relative}
+.imgmodal-dropzone:hover,.imgmodal-dropzone.dragover{border-color:var(--a);background:rgba(90,138,0,.06)}
+.imgmodal-dropzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.imgmodal-dropzone-icon{font-size:26px;margin-bottom:8px}
+.imgmodal-dropzone p{font-size:12px;color:var(--tm);margin:0;line-height:1.6}
+.imgmodal-dropzone p strong{color:var(--t)}
+.imgmodal-pending{display:flex;align-items:center;gap:10px;background:rgba(90,138,0,.08);border:1px solid var(--a);border-radius:6px;padding:10px 14px;font-size:11px;font-family:monospace;color:var(--a)}
+.imgmodal-pending img{width:36px;height:48px;object-fit:cover;border-radius:4px;border:1px solid var(--b)}
+.imgmodal-footer{padding:12px 18px;border-top:1px solid var(--b);display:flex;gap:8px;justify-content:flex-end}
+.imgmodal-footer .btn{min-width:90px}
+
+/* CONTEXT MENU */
+.ctxmenu{position:fixed;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:4px 0;z-index:10000;min-width:170px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.ctxmenu button{display:block;width:100%;background:none;border:none;color:var(--t);padding:8px 14px;font-size:12px;text-align:left;cursor:pointer;font-family:'DM Sans',sans-serif}
+.ctxmenu button:hover{background:var(--s2);color:var(--a)}
+.ctx-div{height:1px;background:var(--b);margin:4px 0}
+
+/* DETAIL PANEL */
+.doverlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:flex-start;justify-content:flex-end}
+.doverlay.open{display:flex}
+.dpanel{width:400px;height:100vh;background:var(--s);border-left:1px solid var(--b);overflow-y:auto;display:flex;flex-direction:column;animation:slideIn .2s ease}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.dheader{padding:16px 20px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--s);z-index:1}
+.dheader h3{font-size:15px;font-weight:700;letter-spacing:2px;color:var(--a);font-family:monospace}
+.xbtn{background:none;border:none;color:var(--tm);font-size:16px;cursor:pointer;padding:3px 6px;border-radius:3px}
+.xbtn:hover{color:var(--t)}
+.dimgw{background:var(--s2);display:flex;align-items:center;justify-content:center;max-height:240px;overflow:hidden;cursor:zoom-in;position:relative}
+.dimgw:hover::after{content:'⤢  View / Replace';position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-family:monospace;letter-spacing:.5px;text-align:center;padding:6px 0;pointer-events:none}
+.dimgw img{max-width:100%;max-height:240px;object-fit:contain}
+.dfields{padding:16px 20px;flex:1;overflow-y:auto}
+.dfield{margin-bottom:14px}
+.dfield label{display:block;font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-family:monospace}
+.dfield .val{font-size:12px;color:var(--t);padding:7px 9px;background:var(--s2);border:1px solid var(--b);border-radius:var(--r);min-height:30px;transition:border-color .2s}
+.dfield .val.editable{cursor:text}
+.dfield .val.editable:focus{outline:none;border-color:var(--a)}
+.dfield select.val{width:100%;cursor:pointer}
+.dfield .val.readonly{cursor:default;color:var(--td)}
+.dactions{padding:12px 20px;border-top:1px solid var(--b);display:flex;gap:8px;position:sticky;bottom:0;background:var(--s)}
+.dactions .btn{flex:1}
+.soverlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;display:none;align-items:flex-start;justify-content:flex-end}
+.soverlay.open{display:flex}
+.sdrawer{width:320px;height:100vh;background:var(--s);border-left:1px solid var(--b);padding:24px;overflow-y:auto;animation:slideIn .2s ease}
+.sdrawer h3{font-size:18px;font-weight:700;letter-spacing:2px;color:var(--a);margin-bottom:20px;font-family:monospace}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 0;gap:12px;color:var(--tm);font-size:12px;font-family:monospace}
+.spinner{width:28px;height:28px;border:2px solid var(--b);border-top-color:var(--a);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:60px 0;color:var(--tm);font-size:13px;line-height:2}
+.tc{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:6px}
+.toast{background:var(--s);border:1px solid var(--b);border-radius:6px;padding:9px 14px;font-size:11px;font-family:monospace;max-width:260px}
+.toast.success{border-color:var(--grn);color:var(--grn)}
+.toast.error{border-color:var(--red);color:var(--red)}
+.toast.info{border-color:var(--a);color:var(--a)}
+
+/* COLOUR PICKER MODAL */
+.cpoverlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:700;display:none;align-items:center;justify-content:center}
+.cpoverlay.open{display:flex}
+.cppanel{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:24px;width:600px;display:flex;flex-direction:column;gap:14px;box-shadow:0 16px 48px rgba(0,0,0,.5);max-height:95vh;overflow-y:auto}
+.cppanel h3{font-size:14px;font-weight:700;letter-spacing:2px;color:var(--a);font-family:monospace;margin:0}
+.cp-top{display:flex;gap:20px;align-items:flex-start}
+.cp-wheel-wrap{position:relative;width:240px;height:240px;flex-shrink:0;cursor:crosshair;user-select:none}
+#cpWheel{border-radius:50%;display:block;touch-action:none}
+#cpCursor{position:absolute;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1.5px #000,0 2px 6px rgba(0,0,0,.4);pointer-events:none;transform:translate(-50%,-50%);top:50%;left:50%;transition:none}
+.cp-right{display:flex;flex-direction:column;gap:10px;flex:1;min-width:0}
+/* Split swatch */
+.cp-split-swatch{width:100%;height:120px;border-radius:10px;border:1px solid var(--b);overflow:hidden;display:flex;position:relative}
+.cp-swatch-new{flex:1;transition:background .08s;position:relative}
+.cp-swatch-orig{flex:1;position:relative}
+.cp-swatch-divider{position:absolute;left:50%;top:0;bottom:0;width:2px;background:rgba(255,255,255,.5);z-index:2;pointer-events:none}
+.cp-swatch-label{position:absolute;bottom:5px;font-size:9px;font-family:monospace;letter-spacing:.5px;text-transform:uppercase;padding:2px 5px;border-radius:3px;background:rgba(0,0,0,.35);color:#fff;pointer-events:none}
+.cp-swatch-label.new{left:6px}
+.cp-swatch-label.orig{right:6px}
+/* Hex row */
+.cp-hex-block{display:flex;flex-direction:column;gap:3px;flex:1}
+.cp-hex-block label{font-size:9px;color:var(--tm);text-transform:uppercase;letter-spacing:1px;font-family:monospace}
+.cp-hex-input-wrap{display:flex;gap:4px;align-items:center}
+.cp-hex-input-wrap input{flex:1;padding:7px 8px;font-size:13px;font-family:monospace;letter-spacing:1.5px;text-transform:uppercase}
+.cp-copy-btn{background:none;border:1px solid var(--b);border-radius:4px;color:var(--tm);font-size:11px;padding:5px 7px;cursor:pointer;white-space:nowrap}
+.cp-copy-btn:hover{border-color:var(--a);color:var(--a)}
+/* Delta */
+/* Names row */
+.cp-names-row{display:flex;gap:8px}
+.cp-name-block{flex:1;min-width:0}
+.cp-name-block label{display:block;font-size:9px;color:var(--tm);text-transform:uppercase;letter-spacing:1px;font-family:monospace;margin-bottom:2px}
+.cp-name-val{font-size:11px;font-weight:600;color:var(--t);font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:15px}
+.cp-name-val.orig{color:var(--td)}
+.cp-brightness{display:flex;flex-direction:column;gap:6px}
+.cp-brightness label{font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:1px;font-family:monospace}
+#cpBright{width:100%;cursor:pointer;height:8px;border-radius:4px;outline:none;border:none}
+.cp-divider{height:1px;background:var(--b);margin:2px 0}
+.cp-pantone-section{display:flex;flex-direction:column;gap:8px}
+.cp-pantone-section label{font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:1px;font-family:monospace}
+.cp-pantone-row{display:flex;gap:8px}
+#cpPantoneIn{flex:1;padding:8px 10px;font-size:13px;font-family:monospace}
+#cpPantoneBtn{white-space:nowrap;padding:8px 14px;font-size:12px}
+.cp-actions{display:flex;gap:8px}
+.cp-actions .btn{flex:1}
+.colour-chips{display:flex;flex-wrap:wrap;gap:4px;padding:2px 0}
+.colour-style-chip{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--s2);border:1px solid var(--b);color:var(--t);cursor:pointer;font-family:monospace;white-space:nowrap}
+.colour-style-chip:hover{border-color:var(--a);color:var(--a)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--b);border-radius:3px}
+/* GOOGLE DRIVE */
+.gdrive-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1100;display:none;align-items:center;justify-content:center}
+.gdrive-modal-overlay.open{display:flex}
+.gdrive-modal{background:var(--s);border:1px solid var(--b);border-radius:12px;width:480px;max-width:calc(100vw - 40px);max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.6);animation:fadeUp .18s ease}
+.gdrive-modal-header{padding:14px 18px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between}
+.gdrive-modal-header h4{font-size:13px;font-weight:700;letter-spacing:2px;color:var(--a);font-family:monospace;margin:0}
+.gdrive-modal-body{padding:18px;display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+.gdrive-file-list{display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto}
+.gdrive-file-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--s2);border:1px solid var(--b);border-radius:6px;cursor:pointer;transition:border-color .15s}
+.gdrive-file-item:hover{border-color:var(--a)}
+.gdrive-file-icon{font-size:18px;flex-shrink:0}
+.gdrive-file-info{flex:1;min-width:0}
+.gdrive-file-name{font-size:12px;font-weight:600;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gdrive-file-date{font-size:10px;color:var(--td);font-family:monospace;margin-top:2px}
+.gdrive-modal-footer{padding:12px 18px;border-top:1px solid var(--b);display:flex;gap:8px;justify-content:flex-end;align-items:center}
+.gdrive-status{font-size:11px;color:var(--tm);font-family:monospace;flex:1}
+.btn.gdrive{background:#1a73e8;color:#fff;border:none}
+.btn.gdrive:hover{opacity:.88}
+.btn.gdrive.connected{background:var(--grn);color:#fff}
+
+/* GROUPED VIEW */
+.groupedwrap{width:100%;height:calc(100vh - 130px);overflow:hidden;position:relative;background:var(--s2);cursor:default}
+.grouped-canvas{position:absolute;top:0;left:0;transform-origin:0 0}
+.group-lane{position:absolute;top:0;pointer-events:none}
+.group-lane-header{position:absolute;top:0;left:0;right:0;background:var(--s);border:1px solid var(--b);border-radius:8px 8px 0 0;padding:10px 14px;pointer-events:all;cursor:grab;user-select:none;z-index:5}
+.group-lane-header:active{cursor:grabbing}
+.group-lane-body{position:absolute;top:52px;left:0;right:0;bottom:0;border:1px solid var(--b);border-top:none;border-radius:0 0 8px 8px;background:rgba(255,255,255,.3);pointer-events:none}
+.group-lane-body.drag-over{background:rgba(90,138,0,.08);border-color:var(--a)}
+.group-col-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--a);font-family:monospace}
+.group-col-count{font-size:10px;color:var(--tm);font-family:monospace;margin-top:2px}
+.gcard{position:absolute;background:#fff;border:1px solid var(--b);border-radius:8px;overflow:hidden;cursor:grab;width:200px;user-select:none;transition:border-color .15s,box-shadow .15s}
+.gcard:hover{border-color:var(--a)}
+.gcard.dragging{cursor:grabbing;box-shadow:0 8px 32px rgba(0,0,0,.3);border-color:var(--a);z-index:9999!important}
+.gcard .cimg{height:300px;background:var(--s2);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.gcard .cimg img{width:100%;height:100%;object-fit:contain;display:block}
+.gcard .cimg .noimg{font-size:10px;color:var(--tm);text-align:center}
+.gcard .cbody{padding:8px 10px}
+.gcard .cname{font-size:11px;font-weight:500;line-height:1.3;color:var(--t);text-align:center;margin-bottom:4px}
+.gcard .cmeta{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+
+/* PANTONE SWATCH BAR */
+#pantoneBar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:400;background:var(--s);border:1px solid var(--b);border-radius:10px;padding:10px 14px 8px;box-shadow:0 4px 24px rgba(0,0,0,.18);display:none;cursor:grab;user-select:none;max-width:calc(100vw - 40px)}
+#pantoneBar.visible{display:flex;align-items:flex-start;gap:0;flex-direction:column}
+#pantoneBar:active{cursor:grabbing}
+.pbar-header{display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:8px;gap:12px}
+.pbar-title{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tm);font-family:monospace}
+.pbar-btns{display:flex;gap:4px;align-items:center}
+.pbar-btn{background:none;border:none;color:var(--td);font-size:11px;cursor:pointer;padding:2px 5px;border-radius:3px;line-height:1}
+.pbar-btn:hover{color:var(--t);background:var(--s2)}
+.pbar-swatches{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;max-width:calc(100vw - 80px)}
+.pswatch{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+.pswatch:hover .pswatch-chip{transform:scale(1.08);border-color:var(--a)}
+.pswatch-chip{width:44px;height:66px;border-radius:6px;border:1.5px solid var(--b);flex-shrink:0;transition:transform .12s,border-color .12s;overflow:hidden;background:var(--s2)}
+.pswatch-chip img{width:100%;height:100%;object-fit:cover;display:block}
+.pswatch-label{font-size:7.5px;font-weight:700;font-family:monospace;color:var(--t);text-align:center;width:48px;white-space:normal;word-break:break-word;letter-spacing:.2px;line-height:1.3}
+/* PANTONE LOOKUP MODAL */
+#pantLookupSwatch{transition:background .2s}
+#pantLookupHexBadge{display:inline-block;padding:4px 12px;border-radius:20px;background:var(--s2);border:1px solid var(--b)}
+/* Drag handle stripe */
+.pbar-drag{width:28px;height:3px;background:var(--b);border-radius:2px;margin:0 auto 2px}
+/* Attached-to-canvas mode */
+#pantoneBar.on-canvas{position:absolute;bottom:auto;left:auto;transform:none;z-index:200}
+</style>
+
+<div id="app">
+  <header id="appHeader" style="display:none">
+    <div class="logo">DRP <span id="collLabel">// SELECT COLLECTION</span></div>
+    <div class="hright">
+      <div class="sync"><div class="dot" id="dot"></div><span id="syncLbl">Ready</span></div>
+      <button class="btn ghost" onclick="openSettings()">⚙ Settings</button>
+      <button class="btn gdrive" id="gdriveConnBtn" onclick="gdriveAuth()">☁ Connect Drive</button>
+      <button class="btn sec" id="gdriveSaveBtn" onclick="gdriveSave()" style="display:none" title="Save plan to Google Drive">↑ Drive Save</button>
+      <button class="btn sec" id="gdriveLoadBtn" onclick="gdriveOpenModal()" style="display:none" title="Load plan from Google Drive">↓ Drive Load</button>
+      <button class="btn sec" onclick="downloadApp()">↓ Download</button>
+    </div>
+  </header>
+  <div class="cbar" id="cbar" style="display:none">
+    <span class="clabel">Brand</span>
+    <select id="brandSel" style="min-width:140px;font-size:13px" onchange="filterCollsByBrand()">
+      <option value="">All Brands</option>
+      <option value="Oh Polly">Oh Polly</option>
+      <option value="Bo+Tee">Bo+Tee</option>
+      <option value="Oh Polly Swim">Oh Polly Swim</option>
+    </select>
+    <span class="clabel">Collection</span>
+    <input type="text" id="collSearch" placeholder="Search collections..." oninput="filterCollSearch()" style="width:180px">
+    <select id="collSel" style="min-width:240px;font-size:13px"><option>Loading...</option></select>
+    <button class="btn" id="loadBtn" onclick="loadProducts()">Load Products →</button>
+  </div>
+  <div class="toolbar" id="toolbar" style="display:none">
+    <div class="vtoggle">
+      <button onclick="setView('grid')" id="btnG" class="active">⊞ Canvas</button>
+      <button onclick="setView('table')" id="btnT">≡ Table</button>
+      <button onclick="setView('colours')" id="btnC">◉ Colours</button>
+      <button onclick="setView('grouped')" id="btnGrp">⫿ Grouped</button>
+    </div>
+    <span class="clabel" style="margin-left:8px">Filter</span>
+    <input type="text" id="fInput" placeholder="Search..." oninput="renderProducts()" style="width:180px">
+    <div class="sp"></div>
+    <span class="rc" id="rc"></span>
+    <button class="btn sec" onclick="loadProducts()">↻ Refresh</button>
+    <button class="btn sec" onclick="showPantoneBar()" id="paletteBtn" style="display:none">◈ Palette</button>
+  </div>
+  <main id="mainArea">
+    <div id="setupWrap" style="padding:20px">
+      <div class="setup">
+        <h2>RANGE PLAN</h2>
+        <p>Enter your Airtable credentials. Saved locally in your browser.</p>
+        <div class="fg"><label>Personal Access Token</label><input type="password" id="tokIn" placeholder="patXXX..."></div>
+        <div class="fg"><label>Base ID</label><input type="text" id="baseIn" placeholder="appXXXXXXXXXXXXXX"></div>
+        <button class="btn" onclick="saveAndConnect()">Connect →</button>
+        <div class="errmsg" id="setupErr"></div>
+      </div>
+    </div>
+    <div id="dataWrap" style="display:none">
+      <div id="canvasWrap">
+        <div id="canvas"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="gdrive-modal-overlay" id="gdriveModal" onclick="if(event.target===this)gdriveCloseModal()">
+  <div class="gdrive-modal">
+    <div class="gdrive-modal-header">
+      <h4>☁ LOAD FROM GOOGLE DRIVE</h4>
+      <button class="xbtn" onclick="gdriveCloseModal()">✕</button>
+    </div>
+    <div class="gdrive-modal-body">
+      <div style="font-size:11px;color:var(--tm);font-family:monospace">Click a saved layout to restore card positions:</div>
+      <div class="gdrive-file-list" id="gdriveFileList"></div>
+    </div>
+    <div class="gdrive-modal-footer">
+      <span class="gdrive-status" id="gdriveModalStatus"></span>
+      <button class="btn sec" onclick="gdriveCloseModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="ctxmenu" id="ctxMenu" style="display:none">
+  <button onclick="ctxProperties()" style="color:var(--a)">✦ Properties</button>
+  <button onclick="ctxOpenAirtable()" style="color:#6ba3ff">⬡ Open in Airtable ↗</button>
+  <button onclick="ctxChangeColour()" style="color:var(--amb)">◈ Change Colour</button>
+  <div class="ctx-div"></div>
+  <button onclick="ctxLayer('front')" style="color:var(--t)">⬆⬆ Bring to Front</button>
+  <button onclick="ctxLayer('forward')" style="color:var(--tm)">⬆ Bring Forward</button>
+  <button onclick="ctxLayer('backward')" style="color:var(--tm)">⬇ Send Backward</button>
+  <button onclick="ctxLayer('back')" style="color:var(--td)">⬇⬇ Send to Back</button>
+</div>
+
+<div class="doverlay" id="dOverlay" onclick="maybeCloseDetail(event)">
+  <div class="dpanel">
+    <div class="dheader"><h3 id="dTitle">Properties</h3><button class="xbtn" onclick="closeDetail()">✕</button></div>
+    <div class="dimgw" id="dImgW" style="display:none"></div>
+    <div class="dfields" id="dFields"></div>
+    <div class="dactions">
+      <button class="btn sec" onclick="closeDetail()">Cancel</button>
+      <button class="btn" id="saveBtn" onclick="saveRecord()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="soverlay" id="sOverlay" onclick="maybeCloseSett(event)">
+  <div class="sdrawer">
+    <h3>Settings</h3>
+    <div class="fg"><label>Airtable Personal Access Token</label><input type="password" id="sTok"></div>
+    <div class="fg"><label>Base ID</label><input type="text" id="sBase"></div>
+    <div class="fg"><label>Drive Folder ID (recolour staging)</label><input type="text" id="sDrive" placeholder="1ABC..."></div>
+    <div class="fg"><label>Anthropic API Key <span style="color:var(--td);font-size:10px">(for Pantone lookup)</span></label><input type="password" id="sAnthropicKey" placeholder="sk-ant-..."></div>
+    <div class="fg"><label>SerpAPI Key <span style="color:var(--td);font-size:10px">(for Pantone swatch images)</span></label><input type="password" id="sSerpKey" placeholder="..."></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn sec" onclick="closeSett()">Cancel</button>
+      <button class="btn" onclick="updateSett()">Save & Reconnect</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="cpoverlay" id="cpOverlay" onclick="maybeCpClose(event)">
+  <div class="cppanel" id="cpPanel">
+    <h3>◈ CHANGE COLOUR</h3>
+    <div class="cp-top">
+      <div class="cp-wheel-wrap" id="cpWheelWrap">
+        <canvas id="cpWheel" width="240" height="240"></canvas>
+        <div id="cpCursor"></div>
+      </div>
+      <div class="cp-right">
+        <!-- Split swatch: new (left) / original (right) -->
+        <div class="cp-split-swatch">
+          <div class="cp-swatch-new" id="cpSwatchNew"></div>
+          <div class="cp-swatch-orig" id="cpSwatchOrig"></div>
+          <div class="cp-swatch-divider"></div>
+          <span class="cp-swatch-label new">New</span>
+          <span class="cp-swatch-label orig">Original</span>
+        </div>
+        <!-- New hex + copy -->
+        <div class="cp-hex-block">
+          <label>New Hex</label>
+          <div class="cp-hex-input-wrap">
+            <input type="text" id="cpHexIn" maxlength="7" placeholder="#FFFFFF">
+            <button class="cp-copy-btn" onclick="cpCopy('new')" title="Copy">⧉</button>
+          </div>
+        </div>
+        <!-- Names row: new name left, original pantone right -->
+        <div class="cp-names-row">
+          <div class="cp-name-block">
+            <label>New Name</label>
+            <div class="cp-name-val" id="cpColourName">—</div>
+          </div>
+          <div class="cp-name-block">
+            <label>Original Pantone</label>
+            <div class="cp-name-val orig" id="cpOrigName">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="cp-brightness">
+      <label>Brightness</label>
+      <input type="range" id="cpBright" min="0" max="100" value="100">
+    </div>
+    <div class="cp-divider"></div>
+    <div class="cp-pantone-section">
+      <label>Pantone Lookup</label>
+      <div class="cp-pantone-row">
+        <input type="text" id="cpPantoneIn" placeholder="e.g. 18-1550 TCX or Living Coral">
+        <button class="btn sec" id="cpPantoneBtn" onclick="lookupPantone()">Look up</button>
+      </div>
+    </div>
+    <div class="cp-actions">
+      <button class="btn sec" onclick="closeCp()">Cancel</button>
+      <button class="btn ghost" onclick="resetCp()" id="cpResetBtn">↺ Reset</button>
+      <button class="btn" onclick="confirmCp()">Apply Colour</button>
+    </div>
+  </div>
+</div>
+
+<!-- PANTONE LOOKUP MODAL (from colours table) -->
+<div class="imgmodal-overlay" id="pantLookupOverlay">
+  <div class="imgmodal" id="pantLookupModal" style="width:480px">
+    <div class="imgmodal-header">
+      <h4 id="pantLookupTitle">◈ PANTONE LOOKUP</h4>
+      <button class="xbtn" onclick="closePantLookup()">✕</button>
+    </div>
+    <div class="imgmodal-body" style="gap:16px">
+      <!-- Search input -->
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label style="font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;font-family:monospace">Search Pantone</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="pantLookupIn" placeholder="e.g. 18-1550 TCX or Living Coral" style="flex:1;padding:9px 12px;font-size:13px">
+          <button class="btn" id="pantLookupBtn" onclick="doPantLookup()">Look up</button>
+        </div>
+        <div id="pantLookupErr" style="font-size:11px;color:var(--red);font-family:monospace;display:none"></div>
+      </div>
+      <!-- Results: swatch image left, fields right -->
+      <div id="pantLookupResultWrap" style="display:none;gap:16px;align-items:flex-start">
+        <!-- Swatch image -->
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:center;flex-shrink:0">
+          <div id="pantLookupSwatch" style="width:100px;height:140px;border-radius:8px;border:1px solid var(--b);background:var(--s2);overflow:hidden">
+            <img id="pantLookupSwatchImg" src="" style="width:100%;height:100%;object-fit:cover;display:block">
+          </div>
+          <span style="font-size:9px;color:var(--tm);font-family:monospace;text-transform:uppercase;letter-spacing:.5px">Colour Swatch</span>
+        </div>
+        <!-- Fields -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;font-family:monospace">Pantone Colour Code</label>
+            <input type="text" id="pantLookupCodeOut" placeholder="NN-NNNN TCX" style="padding:7px 10px;font-size:13px;font-family:monospace;letter-spacing:1px">
+            <span style="font-size:10px;color:var(--tm);font-family:monospace">Saved to "Pantone Colour" field</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:1px;font-family:monospace">Colour Name</label>
+            <div id="pantLookupNameResult" style="font-size:12px;color:var(--tm);font-family:monospace;padding:7px 10px;background:var(--s2);border:1px solid var(--b);border-radius:var(--r)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="imgmodal-footer">
+      <button class="btn sec" onclick="closePantLookup()">Close</button>
+      <button class="btn" id="pantLookupSaveBtnFooter" onclick="savePantLookup()" style="display:none">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- PANTONE SWATCH BAR -->
+<div id="pantoneBar">
+  <div class="pbar-drag"></div>
+  <div class="pbar-header">
+    <span class="pbar-title">Colour Palette</span>
+    <div class="pbar-btns">
+      <button class="pbar-btn" title="Attach to canvas / float" onclick="togglePbarMode()" id="pbarModeBtn">⊞ Attach</button>
+      <button class="pbar-btn" title="Hide" onclick="hidePantoneBar()">✕</button>
+    </div>
+  </div>
+  <div class="pbar-swatches" id="pbarSwatches"></div>
+</div>
+
+<!-- IMAGE LIGHTBOX / UPLOAD MODAL -->
+<div class="imgmodal-overlay" id="imgModalOverlay" onclick="imgModalMaybeClose(event)">
+  <div class="imgmodal" id="imgModal">
+    <div class="imgmodal-header">
+      <h4 id="imgModalTitle">IMAGE</h4>
+      <button class="xbtn" onclick="closeImgModal()">✕</button>
+    </div>
+    <div class="imgmodal-body">
+      <div class="imgmodal-preview" id="imgModalPreview">
+        <div class="imgmodal-noimg" id="imgModalNoImg">No image</div>
+        <button class="imgmodal-delete" id="imgModalDeleteBtn" onclick="imgModalDelete()" style="display:none">✕ Remove</button>
+      </div>
+      <div class="imgmodal-dropzone" id="imgModalDropzone">
+        <input type="file" id="imgModalFileInput" accept="image/*" onchange="imgModalFilePicked(event)">
+        <div class="imgmodal-dropzone-icon">⊕</div>
+        <p><strong>Drop an image here</strong><br>or click to browse your device</p>
+      </div>
+      <div class="imgmodal-pending" id="imgModalPending" style="display:none">
+        <img id="imgModalPendingThumb" src="" alt="">
+        <div>
+          <div style="font-weight:600;font-size:12px" id="imgModalPendingName"></div>
+          <div style="color:var(--tm);font-size:10px;margin-top:2px">Ready to upload — click Save to apply</div>
+        </div>
+        <button class="btn ghost" style="margin-left:auto;padding:4px 8px;font-size:10px" onclick="imgModalClearPending()">✕</button>
+      </div>
+    </div>
+    <div class="imgmodal-footer">
+      <button class="btn sec" onclick="closeImgModal()">Cancel</button>
+      <button class="btn" id="imgModalSaveBtn" onclick="imgModalSave()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="tc" id="tc"></div>
+
+<script>
+const AT='https://api.airtable.com';
+const GEMINI_SERVER='https://gemini-image-reimaginer-683245251133.us-west1.run.app';
+let cfg={token:'',baseId:'',driveFolderId:'',anthropicKey:'',serpApiKey:''};
+let allTables=[],collTblId='',styleTblId='',fabricTblId='',collFields=[],styleFields=[],styleRecs=[],allCollRecs=[],currentView='grid',activeRec=null,pendingChanges={},ctxRec=null;
+
+const PROP_FIELDS=['Name / SKU','SKU','Style Description','Sample Artwork','Sample CAD','Colour Swatch','Brand Linker','Sample Country','Design Grouping','Sample Status','Collection','Sample Designer','Sample Manager (PD)','Tech Pack Submission Date','Estimated FOB - PD Team','Buyer Ranking','Fabric Code','Sizing Type','Descriptive Colour','Pantone Colour'];
+
+// Table sort state
+let tableSortField=null,tableSortDir=1; // dir: 1=asc, -1=desc
+
+// Canvas state
+let panX=0,panY=0,zoom=1;
+let isPanning=false,panStartX=0,panStartY=0,panOriginX=0,panOriginY=0;
+let cardPositions={};   // recId -> {x,y,z}
+let maxZ=1;
+
+// Drag state
+let dragCard=null,dragOffX=0,dragOffY=0,dragMoved=false,dragStartX=0,dragStartY=0;
+
+window.onload=()=>{
+  // Always register global listeners regardless of saved config
+  document.addEventListener('mousedown',e=>{if(!e.target.closest('.ctxmenu'))hideCtx();});
+  document.addEventListener('contextmenu',e=>{if(!e.target.closest('.card')&&!e.target.closest('.ctxmenu'))hideCtx();});
+  const saved=localStorage.getItem('drp3_cfg');
+  if(saved){cfg=JSON.parse(saved);if(cfg.token&&cfg.baseId){connect();return;}}
+
+};
+
+function saveAndConnect(){
+  cfg.token=document.getElementById('tokIn').value.trim();
+  cfg.baseId=document.getElementById('baseIn').value.trim();
+  document.getElementById('setupErr').textContent='';
+  connect();
+}
+
+async function connect(){
+  setSyn('syn','Connecting...');
+  try{
+    const res=await atGet(`/v0/meta/bases/${cfg.baseId}/tables`);
+    allTables=res.tables||[];
+    if(!allTables.length)throw new Error('No tables found.');
+    collTblId=findTbl(['Collection List','Collections','Collection']);
+    styleTblId=findTbl(['Style Table','Styles','Style']);
+    fabricTblId=findTbl(['Fabric','Fabrics','Fabric Library','Fabric Code']);
+    if(!collTblId)throw new Error('Cannot find "Collection List" table.');
+    if(!styleTblId)throw new Error('Cannot find "Style Table".');
+    collFields=allTables.find(t=>t.id===collTblId)?.fields||[];
+    styleFields=allTables.find(t=>t.id===styleTblId)?.fields||[];
+    localStorage.setItem('drp3_cfg',JSON.stringify(cfg));
+    document.getElementById('setupWrap').style.display='none';
+    document.getElementById('appHeader').style.display='flex';
+    document.getElementById('cbar').style.display='flex';
+    await loadCollections();
+    setSyn('ok','Connected');
+  }catch(e){
+    setSyn('err','Error');
+    document.getElementById('setupErr').textContent=e.message;
+    document.getElementById('setupWrap').style.display='block';
+    document.getElementById('appHeader').style.display='none';
+    document.getElementById('cbar').style.display='none';
+  }
+}
+
+function findTbl(names){
+  for(const n of names){const t=allTables.find(t=>t.name.toLowerCase()===n.toLowerCase());if(t)return t.id;}
+  for(const n of names){const t=allTables.find(t=>t.name.toLowerCase().includes(n.toLowerCase().split(' ')[0]));if(t)return t.id;}
+  return null;
+}
+
+async function loadCollections(){
+  setSyn('syn','Loading collections...');
+  const sel=document.getElementById('collSel');
+  sel.innerHTML='<option>Loading...</option>';
+  let recs=[],offset=null;
+  do{
+    let url=`/v0/${cfg.baseId}/${collTblId}?pageSize=100`;
+    if(offset)url+=`&offset=${encodeURIComponent(offset)}`;
+    const res=await atGet(url);recs.push(...(res.records||[]));offset=res.offset;
+  }while(offset);
+  allCollRecs=recs;
+  document.getElementById('brandSel').value='Oh Polly';
+  filterCollsByBrand();
+}
+
+function filterCollsByBrand(){
+  const brand=document.getElementById('brandSel').value;
+  const nf=guessNameFld(collFields);
+  let filtered=brand?allCollRecs.filter(r=>{
+    const b=r.fields['Brand'];
+    return Array.isArray(b)?b.includes(brand):b===brand;
+  }):allCollRecs;
+  populateCollDropdown(filtered);
+}
+
+let currentCollRecs=[];
+function populateCollDropdown(recs){
+  const nf=guessNameFld(collFields);
+  let filtered=recs.filter(r=>{const num=parseTrailing(String(r.fields[nf]||''));return num!==null&&num>=1500;});
+  if(!filtered.length){filtered=recs;toast('Showing all collections','info');}
+  // Sort by Release Month earliest first, empty to bottom
+  const rmf=collFields.find(f=>f.name.toLowerCase().includes('release month'))?.name||'Release Month';
+  filtered.sort((a,b)=>{
+    const ra=a.fields[rmf],rb=b.fields[rmf];
+    const da=ra?new Date(ra):null,db=rb?new Date(rb):null;
+    if(da&&db)return da-db;
+    if(da)return -1;
+    if(db)return 1;
+    return 0;
+  });
+  currentCollRecs=filtered;
+  renderCollDropdown(filtered);
+  setSyn('ok',`${filtered.length} collections`);
+}
+
+function renderCollDropdown(recs){
+  const nf=guessNameFld(collFields);
+  const sel=document.getElementById('collSel');
+  sel.innerHTML=recs.length
+    ?recs.map(r=>`<option value="${r.id}" data-num="${parseTrailing(String(r.fields[nf]||''))}">${r.fields[nf]||r.id}</option>`).join('')
+    :'<option disabled>No matches</option>';
+}
+
+function filterCollSearch(){
+  const q=document.getElementById('collSearch').value.toLowerCase().trim();
+  const nf=guessNameFld(collFields);
+  const filtered=q?currentCollRecs.filter(r=>String(r.fields[nf]||'').toLowerCase().includes(q)):currentCollRecs;
+  renderCollDropdown(filtered);
+}
+
+function parseTrailing(name){const m=name.match(/[-–]\s*(\d+)\s*$/);return m?parseInt(m[1],10):null;}
+function guessNameFld(fields){
+  const g=['name','collection name','title'];
+  return fields.find(f=>g.some(n=>f.name.toLowerCase()===n))?.name||fields.find(f=>g.some(n=>f.name.toLowerCase().includes(n)))?.name||fields.find(f=>f.type==='singleLineText')?.name||fields[0]?.name||'Name';
+}
+
+async function loadProducts(){
+  const sel=document.getElementById('collSel');
+  const collName=sel.selectedOptions[0]?.text||'';
+  const autonum=sel.selectedOptions[0]?.dataset.num;
+  if(!autonum){toast('Could not determine collection number','error');return;}
+  document.getElementById('collLabel').textContent=`// ${collName}`;
+  const lb=document.getElementById('loadBtn');lb.disabled=true;lb.textContent='Loading...';
+  setSyn('syn','Loading styles...');
+  document.getElementById('setupWrap').style.display='none';
+  document.getElementById('dataWrap').style.display='block';
+  document.getElementById('canvas').innerHTML='<div class="loading"><div class="spinner"></div><span>Fetching styles...</span></div>';
+  try{
+    styleRecs=[];let offset=null;
+    // Clear linked name cache so fresh data is fetched
+    Object.keys(linkedNameCache).forEach(k=>delete linkedNameCache[k]);
+    const formula=encodeURIComponent(`{Collection Autonumber}=${autonum}`);
+    do{
+      let url=`/v0/${cfg.baseId}/${styleTblId}?pageSize=100&filterByFormula=${formula}`;
+      if(offset)url+=`&offset=${encodeURIComponent(offset)}`;
+      const res=await atGet(url);styleRecs.push(...(res.records||[]));offset=res.offset;
+    }while(offset);
+    cardPositions={};maxZ=1;gGroupCards={};groupColOrder=[];
+    // Resolve linked record IDs to names for Collection and Fabric Code
+    await resolveLinkedNames(styleRecs,'Collection',collTblId);
+    if(fabricTblId)await resolveLinkedNames(styleRecs,'Fabric Code',fabricTblId);
+    document.getElementById('toolbar').style.display='flex';
+    setSyn('ok',`${styleRecs.length} styles loaded`);
+    renderProducts();
+    buildPantoneBar();
+  }catch(e){
+    setSyn('err','Load failed');
+    document.getElementById('canvas').innerHTML=`<div class="empty">${e.message}</div>`;
+    toast(e.message,'error');
+  }finally{lb.disabled=false;lb.textContent='Load Products →';}
+}
+
+function setView(v){
+  currentView=v;
+  document.getElementById('btnG').classList.toggle('active',v==='grid');
+  document.getElementById('btnT').classList.toggle('active',v==='table');
+  document.getElementById('btnC').classList.toggle('active',v==='colours');
+  document.getElementById('btnGrp').classList.toggle('active',v==='grouped');
+  const cw=document.getElementById('canvasWrap');
+  const dw=document.getElementById('dataWrap');
+  dw.querySelectorAll('.twrap,.colourswrap,.groupedwrap').forEach(el=>el.remove());
+  if(v==='grid'){
+    cw.style.display='block';
+    renderProducts();
+  } else if(v==='table'){
+    cw.style.display='none';
+    renderTable();
+  } else if(v==='grouped'){
+    cw.style.display='none';
+    renderGrouped();
+  } else {
+    cw.style.display='none';
+    renderColours();
+  }
+}
+
+function renderProducts(){
+  const f=document.getElementById('fInput').value.toLowerCase();
+  const recs=styleRecs.filter(r=>!f||Object.values(r.fields).some(v=>String(v).toLowerCase().includes(f)));
+  document.getElementById('rc').textContent=`${recs.length} styles`;
+  if(currentView==='grid') renderCanvas(recs);
+  else if(currentView==='table') renderTable(recs);
+  else if(currentView==='grouped') renderGrouped(recs);
+  else renderColours();
+}
+
+function imgFlds(){return styleFields.filter(f=>f.type==='multipleAttachments').map(f=>f.name);}
+function firstImg(r){
+  const preferred=['Sample CAD','Sample Artwork'];
+  for(const fn of preferred){const v=r.fields[fn];if(v?.length){const url=v[0].url;return url+(url.includes('?')?'&':'?')+'_cb='+Date.now();}}
+  for(const fn of imgFlds()){if(preferred.includes(fn))continue;const v=r.fields[fn];if(v?.length){const url=v[0].url;return url+(url.includes('?')?'&':'?')+'_cb='+Date.now();}}
+  return null;
+}
+function artworkImg(r){
+  // For SKU group master rows — Sample Artwork only, no fallback to CAD
+  const v=r.fields['Sample Artwork'];
+  if(v?.length){const url=v[0].url;return url+(url.includes('?')?'&':'?')+'_cb='+Date.now();}
+  return null;
+}
+function nameFld(){const g=['name / sku','name','style name','title'];return styleFields.find(f=>g.some(n=>f.name.toLowerCase()===n))?.name||styleFields.find(f=>f.name.toLowerCase().includes('name'))?.name||styleFields[0]?.name||'';}
+function statusFld(){return styleFields.find(f=>f.name==='Sample Status'&&f.type==='singleSelect')?.name||styleFields.find(f=>f.name.toLowerCase().includes('status')&&f.type==='singleSelect')?.name||'';}
+function sc(val){
+  if(!val)return 'neutral';const v=String(val).toLowerCase();
+  if(v.includes('red')||v.includes('cancel')||v.includes('reject'))return 'red';
+  if(v.includes('amber')||v.includes('pending')||v.includes('review')||v.includes('wip'))return 'amber';
+  if(v.includes('green')||v.includes('approved')||v.includes('confirm')||v.includes('active')||v.includes('complete'))return 'green';
+  return 'neutral';
+}
+function fmtVal(val){
+  if(val==null)return '';
+  if(Array.isArray(val))return val.map(x=>typeof x==='object'?(x.name||x.url||''):x).join(', ');
+  if(typeof val==='object')return val.name||'';
+  return String(val);
+}
+
+// Cache for resolved linked record names: tableId -> {recId -> name}
+const linkedNameCache={};
+
+async function resolveLinkedNames(recs,fieldName,tblId){
+  if(!tblId)return;
+  // Collect all unique IDs referenced across all records for this field
+  const ids=new Set();
+  for(const r of recs){
+    const v=r.fields[fieldName];
+    if(Array.isArray(v))v.forEach(id=>typeof id==='string'&&ids.add(id));
+  }
+  if(!ids.size)return;
+  if(!linkedNameCache[tblId])linkedNameCache[tblId]={};
+  const cache=linkedNameCache[tblId];
+  const missing=[...ids].filter(id=>!cache[id]);
+  // Fetch in batches of 10 using filterByFormula OR(RECORD_ID()=...)
+  const BATCH=10;
+  for(let i=0;i<missing.length;i+=BATCH){
+    const batch=missing.slice(i,i+BATCH);
+    const formula=encodeURIComponent('OR('+batch.map(id=>`RECORD_ID()="${id}"`).join(',')+')');
+    try{
+      const res=await atGet(`/v0/${cfg.baseId}/${tblId}?pageSize=100&filterByFormula=${formula}`);
+      for(const rec of res.records||[]){
+        const nf=Object.keys(rec.fields)[0];
+        cache[rec.id]=rec.fields[nf]||rec.id;
+      }
+    }catch(e){/* silently skip if table not accessible */}
+  }
+  // Rewrite field values in records to resolved names
+  for(const r of recs){
+    const v=r.fields[fieldName];
+    if(Array.isArray(v)){
+      r.fields[fieldName]=v.map(id=>typeof id==='string'?(cache[id]||id):id);
+    }
+  }
+}
+
+// ── CANVAS ────────────────────────────────────────────────────────────────────
+function renderCanvas(recs){
+  const canvas=document.getElementById('canvas');
+  const CARD_W=200,CARD_H=340,COLS=Math.max(1,Math.floor(Math.sqrt(recs.length)*1.5)),GAP=24,PAD=40;
+  const nf=nameFld(),stf=statusFld();
+
+  // Set canvas size generously
+  const canvasW=Math.max(3000,COLS*(CARD_W+GAP)+PAD*2);
+  const canvasH=Math.max(2000,Math.ceil(recs.length/COLS)*(CARD_H+GAP)+PAD*2);
+  canvas.style.width=canvasW+'px';
+  canvas.style.height=canvasH+'px';
+
+  // Clear & reset transform
+  canvas.innerHTML='';
+  panX=0;panY=0;zoom=1;
+  applyTransform();
+
+  recs.forEach((r,i)=>{
+    if(!cardPositions[r.id]){
+      const col=i%COLS,row=Math.floor(i/COLS);
+      cardPositions[r.id]={x:PAD+col*(CARD_W+GAP),y:PAD+row*(CARD_H+GAP),z:i+1};
+      if(i+1>maxZ)maxZ=i+1;
+    }
+    const pos=cardPositions[r.id];
+    const img=firstImg(r);
+    const name=r.fields['Style Description']||r.fields[nf]||'Untitled';
+    const status=r.fields[stf]||'';
+    const c=sc(status);
+
+    const card=document.createElement('div');
+    card.className='card';
+    card.dataset.id=r.id;
+    card.style.left=pos.x+'px';
+    card.style.top=pos.y+'px';
+    card.style.zIndex=pos.z;
+    card.innerHTML=`
+      <div class="csbar ${c}"></div>
+      <div class="cimg">${img?`<img src="${img}" loading="lazy">`:'<div class="noimg">◻<br>No image</div>'}</div>
+      <div class="cbody">
+        <div class="cname">${name}</div>
+      </div>`;
+
+    card.addEventListener('mousedown',onCardMouseDown);
+    card.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();showCtx(e,r.id);});
+    canvas.appendChild(card);
+  });
+
+  setupCanvasEvents();
+}
+
+// ── GROUPED VIEW ───────────────────────────────────────────────────────────────
+// Slot-based layout: cards occupy ordered slots within lanes; lanes occupy ordered columns.
+// No free-float — everything snaps, nothing overlaps.
+
+let groupColOrder=[];          // ordered group names
+let gGroupCards={};            // groupName -> [recId, ...] ordered
+let gPanX=0,gPanY=0,gZoom=1;
+let gIsPanning=false,gPanSX=0,gPanSY=0,gPanOX=0,gPanOY=0;
+
+// Card drag state
+let gDragRecId=null,gDragCard=null,gDragMoved=false,gDragSX=0,gDragSY=0;
+let gDragOffX=0,gDragOffY=0; // offset within card in canvas-space
+// Lane drag state
+let gLaneDragGroup=null,gLaneDragMoved=false,gLaneDragSX=0,gLaneDragSY=0;
+let gLaneDragOffX=0; // cursor offset from lane left edge
+let gLaneGhost=null; // floating ghost element while dragging lane
+let gLaneInsertIdx=0; // current insertion index shown by placeholder
+
+const LANE_W=240,LANE_GAP=30,LANE_HDR=52,CARD_W_G=200,CARD_H_G=340,CARD_GAP=16,LANE_PAD_X=20,LANE_PAD_TOP=60;
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+function gLaneX(colIdx){return colIdx*(LANE_W+LANE_GAP);}
+function gCardY(slotIdx){return LANE_HDR+LANE_PAD_TOP/2+slotIdx*(CARD_H_G+CARD_GAP);}
+function gLaneH(groupName){
+  const n=(gGroupCards[groupName]||[]).length;
+  return Math.max(LANE_HDR+200, LANE_HDR+LANE_PAD_TOP/2+n*(CARD_H_G+CARD_GAP)+CARD_GAP+20);
+}
+
+// ── render ───────────────────────────────────────────────────────────────────
+function renderGrouped(recs){
+  if(!recs)recs=styleRecs;
+  const dw=document.getElementById('dataWrap');
+  dw.querySelectorAll('.groupedwrap').forEach(el=>el.remove());
+  const nf=nameFld(),stf=statusFld();
+
+  // Build groups
+  const groups={};
+  for(const r of recs){
+    const g=fmtVal(r.fields['Design Grouping'])||'Ungrouped';
+    if(!groups[g])groups[g]=[];
+    groups[g].push(r);
+  }
+  const allGroups=Object.keys(groups);
+  groupColOrder=groupColOrder.filter(g=>allGroups.includes(g));
+  allGroups.filter(g=>!groupColOrder.includes(g)).forEach(g=>groupColOrder.push(g));
+
+  // Build ordered card lists (preserve existing order)
+  const newGGC={};
+  groupColOrder.forEach(g=>{
+    const existing=gGroupCards[g]||[];
+    const grpIds=new Set((groups[g]||[]).map(r=>r.id));
+    // keep existing order for ids still in group, append new ones
+    const ordered=existing.filter(id=>grpIds.has(id));
+    (groups[g]||[]).forEach(r=>{if(!ordered.includes(r.id))ordered.push(r.id);});
+    newGGC[g]=ordered;
+  });
+  gGroupCards=newGGC;
+
+  // Wrap + canvas
+  const wrap=document.createElement('div');
+  wrap.className='groupedwrap';wrap.id='groupedWrap';
+  const gc=document.createElement('div');
+  gc.id='groupedCanvas';gc.className='grouped-canvas';
+  wrap.appendChild(gc);dw.appendChild(wrap);
+
+  gRedrawAll(gc,recs,nf,stf);
+  applyGroupedTransform();
+  setupGroupedEvents(wrap,gc,recs,nf,stf);
+}
+
+function gRedrawAll(gc,recs,nf,stf){
+  if(!gc)gc=document.getElementById('groupedCanvas');
+  if(!recs)recs=styleRecs;
+  if(!nf)nf=nameFld();
+  if(!stf)stf=statusFld();
+  gc.innerHTML='';
+
+  const maxCards=Math.max(1,...groupColOrder.map(g=>(gGroupCards[g]||[]).length));
+  gc.style.width=(groupColOrder.length*(LANE_W+LANE_GAP)+LANE_GAP)+'px';
+  gc.style.height=(LANE_HDR+LANE_PAD_TOP/2+maxCards*(CARD_H_G+CARD_GAP)+100)+'px';
+
+  groupColOrder.forEach((groupName,colIdx)=>{
+    const lx=gLaneX(colIdx);
+    const lh=gLaneH(groupName);
+    const cardIds=gGroupCards[groupName]||[];
+
+    // Lane container
+    const lane=document.createElement('div');
+    lane.className='group-lane';
+    lane.dataset.group=groupName;
+    lane.style.cssText=`left:${lx}px;width:${LANE_W}px;height:${lh}px;transition:left .18s ease`;
+
+    // Header — drag handle for column reorder
+    const hdr=document.createElement('div');
+    hdr.className='group-lane-header';
+    hdr.style.cursor='grab';
+    hdr.innerHTML=`<div class="group-col-title">${groupName}</div><div class="group-col-count" id="gc-count-${CSS.escape(groupName)}">${cardIds.length} style${cardIds.length!==1?'s':''}</div>`;
+    hdr.addEventListener('mousedown',e=>onLaneHdrMouseDown(e,groupName));
+
+    // Body drop zone
+    const body=document.createElement('div');
+    body.className='group-lane-body';
+    body.dataset.group=groupName;
+    body.style.height=(lh-LANE_HDR)+'px';
+
+    lane.appendChild(hdr);lane.appendChild(body);gc.appendChild(lane);
+
+    // Cards
+    cardIds.forEach((recId,slotIdx)=>{
+      const r=recs.find(x=>x.id===recId);if(!r)return;
+      const img=firstImg(r);
+      const name=r.fields['Style Description']||r.fields[nf]||'Untitled';
+      const c=sc(r.fields[stf]||'');
+      const card=document.createElement('div');
+      card.className='gcard';
+      card.dataset.id=recId;
+      card.style.cssText=`left:${LANE_PAD_X}px;top:${gCardY(slotIdx)}px;z-index:2;position:absolute;width:${CARD_W_G}px;transition:top .15s ease`;
+      card.innerHTML=`<div class="csbar ${c}"></div><div class="cimg">${img?`<img src="${img}" loading="lazy">`:'<div class="noimg">◻<br>No image</div>'}</div><div class="cbody"><div class="cname">${name}</div></div>`;
+      card.addEventListener('mousedown',onGCardMouseDown);
+      card.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();showCtx(e,recId);});
+      lane.appendChild(card);
+    });
+  });
+}
+
+// Reflow cards in a lane to their correct slot positions (animated)
+function gReflowLane(groupName){
+  const cardIds=gGroupCards[groupName]||[];
+  cardIds.forEach((recId,i)=>{
+    const el=document.querySelector(`.gcard[data-id="${recId}"]`);
+    if(el)el.style.top=gCardY(i)+'px';
+  });
+  // Update lane height
+  const lane=document.querySelector(`.group-lane[data-group="${CSS.escape(groupName)}"]`);
+  if(lane){
+    const lh=gLaneH(groupName);
+    lane.style.height=lh+'px';
+    const body=lane.querySelector('.group-lane-body');
+    if(body)body.style.height=(lh-LANE_HDR)+'px';
+  }
+  const cnt=document.getElementById('gc-count-'+CSS.escape(groupName));
+  if(cnt){const n=cardIds.length;cnt.textContent=`${n} style${n!==1?'s':''}`;}
+}
+
+// Reposition all lane elements to their correct column X
+function gReflowLanes(){
+  groupColOrder.forEach((g,i)=>{
+    const lane=document.querySelector(`.group-lane[data-group="${CSS.escape(g)}"]`);
+    if(lane)lane.style.left=gLaneX(i)+'px';
+  });
+  const gc=document.getElementById('groupedCanvas');
+  if(gc){
+    gc.style.width=(groupColOrder.length*(LANE_W+LANE_GAP)+LANE_GAP)+'px';
+  }
+}
+
+// ── CARD DRAG ────────────────────────────────────────────────────────────────
+function onGCardMouseDown(e){
+  if(e.button!==0)return;
+  e.preventDefault();e.stopPropagation();
+  gDragRecId=e.currentTarget.dataset.id;
+  gDragCard=e.currentTarget;
+  gDragMoved=false;
+  gDragSX=e.clientX;gDragSY=e.clientY;
+  // offset from card top-left in canvas space
+  const rect=gDragCard.getBoundingClientRect();
+  gDragOffX=(e.clientX-rect.left)/gZoom;
+  gDragOffY=(e.clientY-rect.top)/gZoom;
+  gDragCard.style.zIndex=9000;
+  gDragCard.style.transition='none';
+}
+
+function onGCardDragMove(e){
+  if(!gDragCard)return;
+  if(!gDragMoved){
+    if(Math.abs(e.clientX-gDragSX)<4&&Math.abs(e.clientY-gDragSY)<4)return;
+    gDragMoved=true;
+    gDragCard.classList.add('dragging');
+  }
+  // Move card freely (it's a child of its lane, so adjust for lane's left offset)
+  const gc=document.getElementById('groupedCanvas');
+  const gcRect=gc.getBoundingClientRect();
+  // canvas-space coords of cursor
+  const cx=(e.clientX-gcRect.left)/gZoom;
+  const cy=(e.clientY-gcRect.top)/gZoom;
+  // find which lane owns this card
+  const ownerGroup=gFindCardGroup(gDragRecId);
+  const colIdx=groupColOrder.indexOf(ownerGroup);
+  const laneOffX=gLaneX(colIdx);
+  gDragCard.style.left=(cx-gDragOffX-laneOffX)+'px';
+  gDragCard.style.top=(cy-gDragOffY)+'px';
+
+  // Highlight target lane and show insert marker
+  const cardCX_canvas=cx; // centre of card in canvas space
+  let targetColIdx=groupColOrder.findIndex((_,i)=>{
+    const lx=gLaneX(i);return cardCX_canvas>=lx&&cardCX_canvas<=lx+LANE_W;
+  });
+  if(targetColIdx<0)targetColIdx=colIdx;
+  const targetGroup=groupColOrder[targetColIdx];
+
+  // Show drop indicator
+  document.querySelectorAll('.group-lane-body').forEach(b=>b.classList.remove('drag-over'));
+  const targetLane=document.querySelector(`.group-lane[data-group="${CSS.escape(targetGroup)}"]`);
+  if(targetLane){
+    const body=targetLane.querySelector('.group-lane-body');
+    if(body)body.classList.add('drag-over');
+  }
+
+  // Calculate insert slot from Y in target lane
+  const targetLaneTopY=gLaneX(targetColIdx); // reuse gLaneX for symmetry — no, use lane element top
+  const laneEl=document.querySelector(`.group-lane[data-group="${CSS.escape(targetGroup)}"]`);
+  if(laneEl){
+    const targetCards=gGroupCards[targetGroup]||[];
+    const cardTopInLane=cy-LANE_HDR-LANE_PAD_TOP/2;
+    let slot=Math.round(cardTopInLane/(CARD_H_G+CARD_GAP));
+    slot=Math.max(0,Math.min(slot,targetCards.length));
+    // Animate sibling cards in target lane to make room
+    const excludeId=targetGroup===ownerGroup?gDragRecId:null;
+    targetCards.forEach((id,i)=>{
+      if(id===excludeId)return;
+      const el=document.querySelector(`.gcard[data-id="${id}"]`);
+      if(!el)return;
+      // effective slot after leaving a gap for insertion
+      const effectiveI=i>=(slot-(targetGroup===ownerGroup&&gGroupCards[ownerGroup].indexOf(gDragRecId)<slot?1:0))?i+1:i;
+      el.style.transition='top .12s ease';
+      el.style.top=gCardY(effectiveI-(targetGroup===ownerGroup&&gGroupCards[ownerGroup].indexOf(gDragRecId)<effectiveI?1:0))+'px';
+    });
+  }
+}
+
+async function onGCardDragEnd(e){
+  if(!gDragCard)return;
+  gDragCard.classList.remove('dragging');
+  document.querySelectorAll('.group-lane-body').forEach(b=>b.classList.remove('drag-over'));
+
+  if(!gDragMoved){
+    gDragCard.style.zIndex=2;gDragCard.style.transition='top .15s ease';
+    openDetail(gDragRecId);
+    gDragCard=null;gDragMoved=false;gDragRecId=null;return;
+  }
+
+  const gc=document.getElementById('groupedCanvas');
+  const gcRect=gc.getBoundingClientRect();
+  const cx=(e.clientX-gcRect.left)/gZoom;
+  const cy=(e.clientY-gcRect.top)/gZoom;
+
+  // Determine target lane
+  let targetColIdx=groupColOrder.findIndex((_,i)=>cx>=gLaneX(i)&&cx<=gLaneX(i)+LANE_W);
+  const ownerGroup=gFindCardGroup(gDragRecId);
+  if(targetColIdx<0)targetColIdx=groupColOrder.indexOf(ownerGroup);
+  const targetGroup=groupColOrder[targetColIdx];
+
+  // Determine target slot
+  const targetCards=(gGroupCards[targetGroup]||[]).filter(id=>id!==gDragRecId);
+  const cardTopInLane=cy-LANE_HDR-LANE_PAD_TOP/2;
+  let slot=Math.round(cardTopInLane/(CARD_H_G+CARD_GAP));
+  slot=Math.max(0,Math.min(slot,targetCards.length));
+
+  // Update data
+  const oldGroup=ownerGroup;
+  gGroupCards[oldGroup]=(gGroupCards[oldGroup]||[]).filter(id=>id!==gDragRecId);
+  targetCards.splice(slot,0,gDragRecId);
+  gGroupCards[targetGroup]=targetCards;
+
+  // Reflow both lanes
+  gReflowLane(oldGroup);
+  if(targetGroup!==oldGroup)gReflowLane(targetGroup);
+
+  // Snap card back into its lane (it may be in wrong lane DOM-wise if group changed)
+  gDragCard.style.zIndex=2;
+  gDragCard.style.transition='top .15s ease,left .15s ease';
+  gDragCard.style.left=LANE_PAD_X+'px';
+  gDragCard.style.top=gCardY(slot)+'px';
+
+  if(targetGroup!==oldGroup){
+    // Move DOM card to new lane
+    const newLane=document.querySelector(`.group-lane[data-group="${CSS.escape(targetGroup)}"]`);
+    if(newLane)newLane.appendChild(gDragCard);
+    // Persist to Airtable
+    const rec=styleRecs.find(r=>r.id===gDragRecId);
+    if(rec){
+      const dgField=styleFields.find(f=>f.name==='Design Grouping');
+      let patchVal;
+      if(dgField?.type==='multipleRecordLinks'){
+        toast(`Updating group to "${targetGroup}"...`,'info');
+        try{
+          const tblId=dgField.options?.linkedTableId;
+          if(tblId){
+            const formula=encodeURIComponent(`{Name}="${targetGroup}"`);
+            const res=await atGet(`/v0/${cfg.baseId}/${tblId}?filterByFormula=${formula}&pageSize=1`);
+            const linked=res.records?.[0];
+            if(linked)patchVal=[linked.id];
+          }
+        }catch(err){toast('Could not resolve linked group: '+err.message,'error');}
+      }else{patchVal=targetGroup;}
+      if(patchVal!==undefined){
+        try{
+          await atPatch(`/v0/${cfg.baseId}/${styleTblId}/${gDragRecId}`,{fields:{'Design Grouping':patchVal}});
+          rec.fields['Design Grouping']=Array.isArray(patchVal)?[targetGroup]:targetGroup;
+          toast(`Moved to "${targetGroup}" ✓`,'success');
+        }catch(err){
+          toast('Save failed: '+err.message,'error');
+          // Revert data
+          gGroupCards[targetGroup]=(gGroupCards[targetGroup]||[]).filter(id=>id!==gDragRecId);
+          gGroupCards[oldGroup].splice(0,0,gDragRecId);
+          gReflowLane(oldGroup);gReflowLane(targetGroup);
+        }
+      }
+    }
+  }
+
+  gDragCard=null;gDragMoved=false;gDragRecId=null;
+}
+
+function gFindCardGroup(recId){
+  return groupColOrder.find(g=>(gGroupCards[g]||[]).includes(recId))||groupColOrder[0];
+}
+
+// ── LANE DRAG (column reorder) ───────────────────────────────────────────────
+function onLaneHdrMouseDown(e,groupName){
+  if(e.button!==0)return;
+  e.preventDefault();e.stopPropagation();
+  gLaneDragGroup=groupName;
+  gLaneDragMoved=false;
+  gLaneDragSX=e.clientX;gLaneDragSY=e.clientY;
+  const lane=document.querySelector(`.group-lane[data-group="${CSS.escape(groupName)}"]`);
+  const laneRect=lane.getBoundingClientRect();
+  gLaneDragOffX=(e.clientX-laneRect.left)/gZoom;
+}
+
+function onLaneDragMove(e){
+  if(!gLaneDragGroup)return;
+  if(!gLaneDragMoved){
+    if(Math.abs(e.clientX-gLaneDragSX)<6&&Math.abs(e.clientY-gLaneDragSY)<6)return;
+    gLaneDragMoved=true;
+    // Create ghost
+    const srcLane=document.querySelector(`.group-lane[data-group="${CSS.escape(gLaneDragGroup)}"]`);
+    gLaneGhost=srcLane.cloneNode(true);
+    gLaneGhost.style.cssText+=`;opacity:0.55;pointer-events:none;z-index:8000;transition:none;box-shadow:0 8px 32px rgba(0,0,0,.3)`;
+    document.getElementById('groupedCanvas').appendChild(gLaneGhost);
+    srcLane.style.opacity='0.25';
+  }
+  // Move ghost
+  const gc=document.getElementById('groupedCanvas');
+  const gcRect=gc.getBoundingClientRect();
+  const cx=(e.clientX-gcRect.left)/gZoom;
+  if(gLaneGhost)gLaneGhost.style.left=(cx-gLaneDragOffX)+'px';
+
+  // Determine insertion index by ghost centre
+  const ghostCX=cx-gLaneDragOffX+LANE_W/2;
+  let insertIdx=groupColOrder.length-1;
+  for(let i=0;i<groupColOrder.length;i++){
+    if(ghostCX<gLaneX(i)+LANE_W/2){insertIdx=i;break;}
+  }
+  gLaneInsertIdx=insertIdx;
+
+  // Animate other lanes to show gap
+  const srcIdx=groupColOrder.indexOf(gLaneDragGroup);
+  // Build a virtual order without the dragged lane, then insert at insertIdx
+  const without=groupColOrder.filter(g=>g!==gLaneDragGroup);
+  const virtualOrder=[...without.slice(0,insertIdx),gLaneDragGroup,...without.slice(insertIdx)];
+  virtualOrder.forEach((g,i)=>{
+    if(g===gLaneDragGroup)return; // ghost handles this
+    const lane=document.querySelector(`.group-lane[data-group="${CSS.escape(g)}"]`);
+    if(lane){lane.style.transition='left .15s ease';lane.style.left=gLaneX(i)+'px';}
+  });
+}
+
+function onLaneDragEnd(e){
+  if(!gLaneDragGroup)return;
+  const srcLane=document.querySelector(`.group-lane[data-group="${CSS.escape(gLaneDragGroup)}"]`);
+  if(srcLane)srcLane.style.opacity='';
+  if(gLaneGhost){gLaneGhost.remove();gLaneGhost=null;}
+
+  if(gLaneDragMoved){
+    // Commit reorder
+    const without=groupColOrder.filter(g=>g!==gLaneDragGroup);
+    groupColOrder=[...without.slice(0,gLaneInsertIdx),gLaneDragGroup,...without.slice(gLaneInsertIdx)];
+    gReflowLanes();
+  }
+  gLaneDragGroup=null;gLaneDragMoved=false;
+}
+
+// ── EVENTS ───────────────────────────────────────────────────────────────────
+function applyGroupedTransform(){
+  const gc=document.getElementById('groupedCanvas');
+  if(gc)gc.style.transform=`translate(${gPanX}px,${gPanY}px) scale(${gZoom})`;
+}
+
+function setupGroupedEvents(wrap,gc,recs,nf,stf){
+  wrap.addEventListener('mousedown',e=>{
+    if(e.button===1){e.preventDefault();gIsPanning=true;gPanSX=e.clientX;gPanSY=e.clientY;gPanOX=gPanX;gPanOY=gPanY;wrap.style.cursor='grabbing';}
+  });
+  wrap.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const rect=wrap.getBoundingClientRect();
+    const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+    const delta=e.deltaY>0?0.9:1.1;
+    const nz=Math.min(3,Math.max(0.15,gZoom*delta));
+    gPanX=mx-(mx-gPanX)*(nz/gZoom);gPanY=my-(my-gPanY)*(nz/gZoom);gZoom=nz;
+    applyGroupedTransform();
+  },{passive:false});
+  wrap.addEventListener('contextmenu',e=>{if(e.target===wrap||e.target===gc){e.preventDefault();hideCtx();}});
+
+  const onMove=e=>{
+    if(gIsPanning){gPanX=gPanOX+(e.clientX-gPanSX);gPanY=gPanOY+(e.clientY-gPanSY);applyGroupedTransform();}
+    if(gDragCard)onGCardDragMove(e);
+    if(gLaneDragGroup)onLaneDragMove(e);
+  };
+  const onUp=e=>{
+    if(gIsPanning){gIsPanning=false;wrap.style.cursor='default';}
+    if(gDragCard)onGCardDragEnd(e);
+    if(gLaneDragGroup)onLaneDragEnd(e);
+  };
+  wrap._gMoveHandler&&window.removeEventListener('mousemove',wrap._gMoveHandler);
+  wrap._gUpHandler&&window.removeEventListener('mouseup',wrap._gUpHandler);
+  wrap._gMoveHandler=onMove;wrap._gUpHandler=onUp;
+  window.addEventListener('mousemove',onMove);
+  window.addEventListener('mouseup',onUp);
+}
+
+// stub kept for compatibility with any remaining callers
+function onGCardMouseDown(e){
+  if(e.button!==0)return;
+  e.preventDefault();e.stopPropagation();
+  gDragRecId=e.currentTarget.dataset.id;
+  gDragCard=e.currentTarget;
+  gDragMoved=false;
+  gDragSX=e.clientX;gDragSY=e.clientY;
+  const rect=gDragCard.getBoundingClientRect();
+  gDragOffX=(e.clientX-rect.left)/gZoom;
+  gDragOffY=(e.clientY-rect.top)/gZoom;
+  gDragCard.style.zIndex=9000;
+  gDragCard.style.transition='none';
+}
+
+function updateLaneCounts(oldGroup,newGroup){
+  [oldGroup,newGroup].filter(Boolean).forEach(g=>{
+    const el=document.getElementById('gc-count-'+CSS.escape(g));
+    if(el){const n=(gGroupCards[g]||[]).length;el.textContent=`${n} style${n!==1?'s':''}`;}
+  });
+}
+
+function applyTransform(){
+  document.getElementById('canvas').style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;
+}
+
+function setupCanvasEvents(){
+  const wrap=document.getElementById('canvasWrap');
+  // Remove old listeners by replacing element
+  const newWrap=wrap.cloneNode(false);
+  while(wrap.firstChild)newWrap.appendChild(wrap.firstChild);
+  wrap.parentNode.replaceChild(newWrap,wrap);
+  newWrap.id='canvasWrap';
+  newWrap.appendChild(document.getElementById('canvas'));
+
+  // Middle mouse pan
+  newWrap.addEventListener('mousedown',e=>{
+    if(e.button===1){e.preventDefault();isPanning=true;panStartX=e.clientX;panStartY=e.clientY;panOriginX=panX;panOriginY=panY;newWrap.style.cursor='grabbing';}
+  });
+  window.addEventListener('mousemove',e=>{
+    if(isPanning){panX=panOriginX+(e.clientX-panStartX);panY=panOriginY+(e.clientY-panStartY);applyTransform();}
+    if(dragCard){onDragMove(e);}
+  });
+  window.addEventListener('mouseup',e=>{
+    if(isPanning){isPanning=false;newWrap.style.cursor='default';}
+    if(dragCard){onDragEnd(e);}
+  });
+
+  // Scroll to zoom
+  newWrap.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const rect=newWrap.getBoundingClientRect();
+    const mouseX=e.clientX-rect.left;
+    const mouseY=e.clientY-rect.top;
+    const delta=e.deltaY>0?0.9:1.1;
+    const newZoom=Math.min(3,Math.max(0.2,zoom*delta));
+    // Zoom toward mouse position
+    panX=mouseX-(mouseX-panX)*(newZoom/zoom);
+    panY=mouseY-(mouseY-panY)*(newZoom/zoom);
+    zoom=newZoom;
+    applyTransform();
+  },{passive:false});
+
+  // Prevent context menu on canvas background
+  newWrap.addEventListener('contextmenu',e=>{if(e.target===newWrap||e.target===document.getElementById('canvas')){e.preventDefault();hideCtx();}});
+}
+
+// ── CARD DRAG ─────────────────────────────────────────────────────────────────
+function onCardMouseDown(e){
+  if(e.button!==0)return;
+  dragCard=e.currentTarget;
+  dragMoved=false;
+  dragStartX=e.clientX;dragStartY=e.clientY;
+  const id=dragCard.dataset.id;
+  const pos=cardPositions[id];
+  // Offset within card (accounting for zoom)
+  dragOffX=(e.clientX-panX)/zoom-pos.x;
+  dragOffY=(e.clientY-panY)/zoom-pos.y;
+  // Bring to front while dragging
+  maxZ++;
+  dragCard.style.zIndex=maxZ;
+  cardPositions[id].z=maxZ;
+  e.preventDefault();
+}
+
+function onDragMove(e){
+  if(!dragCard)return;
+  const dx=Math.abs(e.clientX-dragStartX),dy=Math.abs(e.clientY-dragStartY);
+  if(!dragMoved&&dx<3&&dy<3)return;
+  dragMoved=true;
+  dragCard.classList.add('dragging');
+  const id=dragCard.dataset.id;
+  const x=(e.clientX-panX)/zoom-dragOffX;
+  const y=(e.clientY-panY)/zoom-dragOffY;
+  cardPositions[id].x=x;
+  cardPositions[id].y=y;
+  dragCard.style.left=x+'px';
+  dragCard.style.top=y+'px';
+}
+
+function onDragEnd(e){
+  if(!dragCard)return;
+  dragCard.classList.remove('dragging');
+  if(!dragMoved){
+    // It was a click — open detail
+    openDetail(dragCard.dataset.id);
+  }
+  dragCard=null;dragMoved=false;
+}
+
+// ── TABLE VIEW ────────────────────────────────────────────────────────────────
+// Fields that vary per colour variant — always shown in children, prioritised left
+const VARIANT_FIELDS=['Name / SKU','SKU','Descriptive Colour','Pantone Colour','Sample Status','Colour Swatch'];
+
+function renderTable(recs){
+  recs=recs||styleRecs;
+  const dw=document.getElementById('dataWrap');
+  document.getElementById('canvasWrap').style.display='none';
+  dw.querySelectorAll('.twrap').forEach(el=>el.remove());
+  if(!recs.length){const e=document.createElement('div');e.className='empty';e.textContent='No styles found.';dw.appendChild(e);return;}
+
+  const attachmentFieldNames=new Set(styleFields.filter(f=>f.type==='multipleAttachments').map(f=>f.name));
+  const fieldMap={};for(const f of styleFields)fieldMap[f.name]=f;
+
+  // Build vis with variant fields first, then the rest, filtering out attachments
+  const variantVis=VARIANT_FIELDS.filter(n=>!attachmentFieldNames.has(n)&&fieldMap[n]).map(n=>fieldMap[n]);
+  const otherVis=PROP_FIELDS.filter(n=>!attachmentFieldNames.has(n)&&fieldMap[n]&&!VARIANT_FIELDS.includes(n)).map(n=>fieldMap[n]);
+  const vis=[...variantVis,...otherVis];
+  const stf=statusFld();
+
+  // ── Sort ──────────────────────────────────────────────────────────────────
+  let sorted=[...recs];
+  if(tableSortField){
+    sorted.sort((a,b)=>{
+      const av=fmtVal(a.fields[tableSortField])||'';
+      const bv=fmtVal(b.fields[tableSortField])||'';
+      if(!av&&bv)return 1;if(av&&!bv)return -1;
+      const n1=parseFloat(av),n2=parseFloat(bv);
+      if(!isNaN(n1)&&!isNaN(n2))return (n1-n2)*tableSortDir;
+      return av.localeCompare(bv)*tableSortDir;
+    });
+  }
+
+  // ── SKU grouping ──────────────────────────────────────────────────────────
+  const skuField=PROP_FIELDS.find(n=>fieldMap[n]&&(n==='Name / SKU'||n==='SKU'))||null;
+  function getSku(r){
+    if(!skuField)return null;
+    const raw=fmtVal(r.fields[skuField]||'').trim();
+    const m=raw.match(/^([A-Za-z0-9\-\/]+)/);
+    return m?m[1].toUpperCase():raw.toUpperCase()||null;
+  }
+
+  const skuOrder=[];
+  const skuGroups={};
+  for(const r of sorted){
+    const sku=getSku(r);
+    if(!sku){if(!skuGroups['__nosku__'])skuGroups['__nosku__']=[],skuOrder.push('__nosku__');skuGroups['__nosku__'].push(r);continue;}
+    if(!skuGroups[sku]){skuGroups[sku]=[];skuOrder.push(sku);}
+    skuGroups[sku].push(r);
+  }
+
+  if(!window._skuCollapsed)window._skuCollapsed={};
+
+  // ── Build table ───────────────────────────────────────────────────────────
+  const wrap=document.createElement('div');wrap.className='twrap';
+
+  // Scrollable body container
+  const scrollDiv=document.createElement('div');scrollDiv.className='twrap-scroll';
+  scrollDiv.id='twrapScroll';
+
+  const table=document.createElement('table');
+  table.id='mainTable';
+
+  // Header
+  const thead=document.createElement('thead');
+  const htr=document.createElement('tr');
+  const imgTh=document.createElement('th');
+  imgTh.style.width='44px';imgTh.textContent='IMG';
+  htr.appendChild(imgTh);
+  vis.forEach(f=>{
+    const th=document.createElement('th');
+    const isSorted=tableSortField===f.name;
+    const isVariant=VARIANT_FIELDS.includes(f.name);
+    th.className=(isSorted?'sorted':'')+(isVariant?' th-variant':'');
+    if(isVariant)th.style.borderBottom='2px solid var(--a)';
+    th.innerHTML=`${f.name}<span class="sort-arrow">${isSorted?(tableSortDir===1?'▲':'▼'):'⇅'}</span>`;
+    th.addEventListener('click',()=>{
+      if(tableSortField===f.name){tableSortDir*=-1;}else{tableSortField=f.name;tableSortDir=1;}
+      renderTable(recs);
+    });
+    htr.appendChild(th);
+  });
+  thead.appendChild(htr);
+  table.appendChild(thead);
+
+  // Body
+  const tbody=document.createElement('tbody');
+
+  for(const sku of skuOrder){
+    const group=skuGroups[sku];
+    const isGroup=sku!=='__nosku__'&&group.length>1;
+    const collapsed=!!window._skuCollapsed[sku];
+
+    if(isGroup){
+      const master=group[0];
+      const img=artworkImg(master);
+      const status=master.fields[stf]||'',c=sc(status);
+      const cvar=c==='red'?'red':c==='amber'?'amb':'grn';
+
+      const mtr=document.createElement('tr');
+      mtr.className='sku-master'+(collapsed?' collapsed':'');
+      mtr.dataset.sku=sku;
+
+      const imgTd=document.createElement('td');
+      imgTd.className='sku-toggle-cell';
+      imgTd.innerHTML=`<div class="thumb">${img?`<img src="${img}">`:'&nbsp;'}</div>`;
+      imgTd.title='Click to expand/collapse group';
+      imgTd.addEventListener('click',e=>{e.stopPropagation();toggleSkuGroup(sku,mtr);});
+      mtr.appendChild(imgTd);
+
+      // These fields are child-specific — leave blank on the parent row
+      const parentBlankFields=new Set(['Descriptive Colour','Name / SKU','SKU']);
+
+      vis.forEach(f=>{
+        const td=document.createElement('td');
+        if(parentBlankFields.has(f.name)){
+          if(f.name===skuField){td.innerHTML=`<span class="sku-badge">${group.length} styles</span>`;}
+          // else leave blank
+        } else {
+          const d=fmtVal(master.fields[f.name]);
+          if(f.name===stf&&d){td.innerHTML=`<span class="badge ${c}">${d}</span>`;}
+          else{td.textContent=d;td.title=d;}
+        }
+        mtr.appendChild(td);
+      });
+      mtr.addEventListener('click',()=>openDetail(master.id));
+      mtr.addEventListener('contextmenu',e=>{showCtx(e,master.id);});
+      tbody.appendChild(mtr);
+
+      // Child rows — only show cells that differ from master, dim shared ones
+      group.forEach((r,i)=>{
+        const isLast=i===group.length-1;
+        const ctr=document.createElement('tr');
+        ctr.className='sku-child'+(collapsed?' hidden':'')+(isLast?' sku-last-child':'');
+        ctr.dataset.skuparent=sku;
+        const img2=firstImg(r);
+        const status2=r.fields[stf]||'',c2=sc(status2);
+        const cvar2=c2==='red'?'red':c2==='amber'?'amb':'grn';
+
+        const imgTd2=document.createElement('td');
+        imgTd2.innerHTML=`<div class="thumb">${img2?`<img src="${img2}">`:'&nbsp;'}</div>`;
+        ctr.appendChild(imgTd2);
+
+        vis.forEach(f=>{
+          const td=document.createElement('td');
+          const childVal=fmtVal(r.fields[f.name]);
+          const masterVal=fmtVal(master.fields[f.name]);
+          const differs=childVal!==masterVal;
+          const isVariantField=VARIANT_FIELDS.includes(f.name);
+
+          if(isVariantField||differs){
+            // Show the value — it's a variant field or it actually differs
+            td.className='cell-varies';
+            if(f.name===stf&&childVal){td.innerHTML=`<span class="badge ${c2}">${childVal}</span>`;}
+            else{td.textContent=childVal;td.title=childVal;}
+          } else {
+            // Shared / same as parent — dim it
+            td.className='cell-shared';
+            td.textContent='—';
+            td.title=`Same as parent: ${masterVal}`;
+          }
+          ctr.appendChild(td);
+        });
+        ctr.addEventListener('click',()=>openDetail(r.id));
+        ctr.addEventListener('contextmenu',e=>{showCtx(e,r.id);});
+        tbody.appendChild(ctr);
+      });
+
+    } else {
+      const r=group[0];
+      const img=firstImg(r);
+      const status=r.fields[stf]||'',c=sc(status);
+      const cvar=c==='red'?'red':c==='amber'?'amb':'grn';
+
+      const tr=document.createElement('tr');
+      if(c!=='neutral')tr.style.borderLeft=`3px solid var(--${cvar})`;
+
+      const imgTd=document.createElement('td');
+      imgTd.innerHTML=`<div class="thumb">${img?`<img src="${img}">`:'&nbsp;'}</div>`;
+      tr.appendChild(imgTd);
+
+      vis.forEach(f=>{
+        const td=document.createElement('td');
+        const d=fmtVal(r.fields[f.name]);
+        if(f.name===stf&&d){td.innerHTML=`<span class="badge ${c}">${d}</span>`;}
+        else{td.textContent=d;td.title=d;}
+        tr.appendChild(td);
+      });
+      tr.addEventListener('click',()=>openDetail(r.id));
+      tr.addEventListener('contextmenu',e=>{showCtx(e,r.id);});
+      tbody.appendChild(tr);
+    }
+  }
+
+  table.appendChild(tbody);
+  scrollDiv.appendChild(table);
+  wrap.appendChild(scrollDiv);
+
+  // Horizontal scrollbar mirror at bottom
+  const hscroll=document.createElement('div');hscroll.className='twrap-hscroll';hscroll.id='twrapHScroll';
+  const hinner=document.createElement('div');hinner.className='twrap-hscroll-inner';
+  hscroll.appendChild(hinner);
+  wrap.appendChild(hscroll);
+
+  dw.appendChild(wrap);
+
+  // Sync scrollbars after layout
+  requestAnimationFrame(()=>{
+    hinner.style.width=table.scrollWidth+'px';
+    hscroll.addEventListener('scroll',()=>{scrollDiv.scrollLeft=hscroll.scrollLeft;});
+    scrollDiv.addEventListener('scroll',()=>{hscroll.scrollLeft=scrollDiv.scrollLeft;});
+  });
+}
+
+function toggleSkuGroup(sku,masterRow){
+  const collapsed=masterRow.classList.toggle('collapsed');
+  window._skuCollapsed[sku]=collapsed;
+  const children=document.querySelectorAll(`tr.sku-child[data-skuparent="${CSS.escape(sku)}"]`);
+  children.forEach(c=>c.classList.toggle('hidden',collapsed));
+}
+
+// ── COLOURS VIEW ─────────────────────────────────────────────────────────────
+function renderColours(){
+  const dw=document.getElementById('dataWrap');
+  dw.querySelectorAll('.colourswrap').forEach(el=>el.remove());
+  document.getElementById('canvasWrap').style.display='none';
+
+  const nf=nameFld();
+
+  // Build map: pantone -> {styles:[{name,id}], swatchUrl, descriptiveColour}
+  const map=new Map();
+  for(const r of styleRecs){
+    const pantone=String(r.fields['Pantone Colour']||r.fields['Descriptive Colour']||'').trim();
+    if(!pantone)continue;
+    if(!map.has(pantone))map.set(pantone,{styles:[],swatchUrl:null,descriptiveColour:''});
+    const entry=map.get(pantone);
+    const styleName=r.fields['Style Description']||r.fields[nf]||r.id;
+    entry.styles.push({name:styleName,id:r.id});
+    if(!entry.swatchUrl){
+      const sw=r.fields['Colour Swatch'];
+      if(Array.isArray(sw)&&sw.length) entry.swatchUrl=sw[0].url;
+    }
+    // Use first non-empty descriptive colour found for this pantone
+    if(!entry.descriptiveColour&&r.fields['Descriptive Colour']){
+      entry.descriptiveColour=String(r.fields['Descriptive Colour']).trim();
+    }
+  }
+
+  const wrap=document.createElement('div');
+  wrap.className='twrap colourswrap';
+
+  if(!map.size){
+    wrap.innerHTML='<div class="empty" style="padding:60px;text-align:center;color:var(--tm)">No Pantone colours found in this collection.</div>';
+    dw.appendChild(wrap);
+    return;
+  }
+
+  // Sort by count desc
+  const sorted=[...map.entries()].sort((a,b)=>b[1].styles.length-a[1].styles.length);
+
+  const table=document.createElement('table');
+  table.innerHTML=`<thead><tr>
+    <th style="width:220px">Pantone Colour</th>
+    <th style="width:200px">Descriptive Colour</th>
+    <th>Associated Styles</th>
+    <th style="width:80px;text-align:center">Count</th>
+  </tr></thead>`;
+  const tbody=document.createElement('tbody');
+
+  for(const [pantone,{styles,swatchUrl,descriptiveColour}] of sorted){
+    const tr=document.createElement('tr');
+
+    // Col 1: swatch image + pantone name — click opens Pantone lookup modal
+    const imgHtml=swatchUrl
+      ? `<img src="${swatchUrl}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--b);display:block;flex-shrink:0">`
+      : `<span style="display:block;width:48px;height:48px;border-radius:6px;background:var(--s2);border:1px solid var(--b);flex-shrink:0"></span>`;
+    const td1=document.createElement('td');
+    td1.style.verticalAlign='middle';
+    td1.style.cursor='pointer';
+    td1.title='Click to look up Pantone colour';
+    td1.innerHTML=`<div style="display:flex;align-items:center;gap:10px;transition:opacity .15s" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">${imgHtml}<span style="font-family:monospace;font-size:12px;color:var(--t);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px">${pantone}</span></div>`;
+    td1.addEventListener('click', ()=>openPantLookup(pantone, swatchUrl, styles));
+
+    // Col 2: editable Descriptive Colour
+    const td2=document.createElement('td');
+    td2.style.verticalAlign='middle';
+    const inp=document.createElement('div');
+    inp.className='val editable';
+    inp.contentEditable='true';
+    inp.textContent=descriptiveColour;
+    inp.style.cssText='font-size:12px;padding:6px 8px;border-radius:4px;min-width:120px;cursor:text';
+    inp.title='Edit to update Descriptive Colour on all associated styles';
+
+    let saveTimer=null;
+    inp.oninput=()=>{
+      clearTimeout(saveTimer);
+      inp.style.borderColor='var(--amb)';
+      saveTimer=setTimeout(()=>saveDescriptiveColour(pantone,inp,styles),1200);
+    };
+    td2.appendChild(inp);
+
+    // Col 3: style chips
+    const td3=document.createElement('td');
+    const chips=document.createElement('div');
+    chips.className='colour-chips';
+    chips.innerHTML=styles.map(s=>`<span class="colour-style-chip" onclick="openDetail('${s.id}')">${s.name}</span>`).join('');
+    td3.appendChild(chips);
+
+    // Col 4: count
+    const td4=document.createElement('td');
+    td4.style.cssText='text-align:center;font-family:monospace;font-size:13px;font-weight:600;color:var(--a)';
+    td4.textContent=styles.length;
+
+    tr.append(td1,td2,td3,td4);
+    tbody.appendChild(tr);
+  }
+
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  dw.appendChild(wrap);
+  document.getElementById('rc').textContent=`${map.size} pantones`;
+}
+
+async function saveDescriptiveColour(pantone,inp,styles){
+  const newVal=inp.textContent.trim();
+  inp.style.borderColor='var(--b)';
+  setSyn('syn',`Updating ${styles.length} style${styles.length>1?'s':''}...`);
+  try{
+    // Airtable allows up to 10 records per PATCH — batch accordingly
+    const BATCH=10;
+    for(let i=0;i<styles.length;i+=BATCH){
+      const batch=styles.slice(i,i+BATCH);
+      await atPatch(`/v0/${cfg.baseId}/${styleTblId}`,{
+        records:batch.map(s=>({id:s.id,fields:{'Descriptive Colour':newVal}}))
+      });
+      // Update local cache
+      for(const s of batch){
+        const rec=styleRecs.find(r=>r.id===s.id);
+        if(rec) rec.fields['Descriptive Colour']=newVal;
+      }
+    }
+    inp.style.borderColor='var(--grn)';
+    setTimeout(()=>{inp.style.borderColor='var(--b)';},1500);
+    setSyn('ok',`Updated ${styles.length} style${styles.length>1?'s':''}`);
+    toast(`Descriptive Colour updated on ${styles.length} style${styles.length>1?'s':''}`, 'success');
+  }catch(e){
+    inp.style.borderColor='var(--red)';
+    setSyn('err','Save failed');
+    toast('Save failed: '+e.message,'error');
+  }
+}
+
+// ── CONTEXT MENU ──────────────────────────────────────────────────────────────
+function showCtx(e,id){
+  e.preventDefault();e.stopPropagation();
+  ctxRec=styleRecs.find(r=>r.id===id);
+  const m=document.getElementById('ctxMenu');
+  m.style.display='block';
+  const x=Math.min(e.clientX,window.innerWidth-180);
+  const y=Math.min(e.clientY,window.innerHeight-160);
+  m.style.left=x+'px';m.style.top=y+'px';
+}
+function hideCtx(){document.getElementById('ctxMenu').style.display='none';}
+function ctxProperties(){hideCtx();if(ctxRec)openDetail(ctxRec.id);}
+function ctxOpenAirtable(){hideCtx();if(ctxRec)window.open(`https://airtable.com/${cfg.baseId}/${styleTblId}/${ctxRec.id}`,'_blank');}
+function ctxLayer(dir){
+  hideCtx();
+  if(!ctxRec)return;
+  const id=ctxRec.id;
+  const card=document.querySelector(`.card[data-id="${id}"]`);
+  if(!card)return;
+  const allCards=[...document.querySelectorAll('.card')].sort((a,b)=>parseInt(a.style.zIndex)-parseInt(b.style.zIndex));
+  const zs=allCards.map(c=>parseInt(c.style.zIndex));
+  const myZ=parseInt(card.style.zIndex);
+  if(dir==='front'){maxZ++;card.style.zIndex=maxZ;cardPositions[id].z=maxZ;}
+  else if(dir==='back'){card.style.zIndex=1;cardPositions[id].z=1;}
+  else if(dir==='forward'){
+    const above=allCards.find(c=>parseInt(c.style.zIndex)>myZ);
+    if(above){const az=parseInt(above.style.zIndex);above.style.zIndex=myZ;card.style.zIndex=az;cardPositions[id].z=az;cardPositions[above.dataset.id].z=myZ;}
+  } else if(dir==='backward'){
+    const below=[...allCards].reverse().find(c=>parseInt(c.style.zIndex)<myZ);
+    if(below){const bz=parseInt(below.style.zIndex);below.style.zIndex=myZ;card.style.zIndex=bz;cardPositions[id].z=bz;cardPositions[below.dataset.id].z=myZ;}
+  }
+}
+
+function ctxChangeColour(){
+  hideCtx();
+  if(!ctxRec)return;
+  openCp(ctxRec);
+}
+
+// ── COLOUR PICKER ─────────────────────────────────────────────────────────────
+let cpRec=null, cpHue=0, cpSat=0, cpBrightness=0.85;
+let cpDragging=false;
+let cpCurrentName='';
+let cpHasColour=false; // true only after user picks or looks up a colour
+let cpOriginal={hue:0,sat:0,brightness:0.85,name:'',swatchUrl:null};
+
+function cpEl(id){return document.getElementById(id);}
+
+function openCp(rec){
+  cpRec=rec;
+
+  // Resolve original pantone name and colour
+  const pantoneCode=String(rec.fields['Pantone Colour']||'').trim();
+  const descriptive=String(rec.fields['Descriptive Colour']||'').trim();
+  const origName=pantoneCode||descriptive||'';
+
+  // Resolve swatch image from Colour Swatch field
+  const swatchField=rec.fields['Colour Swatch'];
+  const swatchUrl=Array.isArray(swatchField)&&swatchField.length?swatchField[0].url:null;
+
+  // Start neutral — don't guess colour from text, only use looked-up values
+  let origH=0,origS=0,origB=0.85;
+
+  // Reset colour state — no colour picked yet
+  cpHasColour=false;
+
+  // Store original so Reset can restore it
+  cpOriginal={hue:0,sat:0,brightness:0.85,name:origName,swatchUrl};
+
+  // Set current state to original
+  cpHue=0; cpSat=0; cpBrightness=0.85;
+  cpCurrentName=origName;
+
+  // Reset pantone input
+  cpEl('cpPantoneIn').value='';
+
+  // Set original name label
+  cpEl('cpOrigName').textContent=origName||'—';
+
+  // Paint original swatch (right half) — image if available, else blank
+  cpSetOrigSwatch(swatchUrl, null);
+
+  // Show modal
+  cpEl('cpOverlay').classList.add('open');
+
+  // Draw wheel then sync all UI
+  cpEl('cpBright').value=Math.round(cpBrightness*100);
+  cpUpdateBrightSlider();
+  drawWheel();
+  cpSyncUI();
+
+  // Wire up controls (replace old handlers cleanly)
+  cpEl('cpBright').oninput=()=>{
+    cpBrightness=cpEl('cpBright').value/100;
+    cpHasColour=true;
+    cpCurrentName='';
+    cpUpdateBrightSlider();
+    drawWheel();
+    cpSyncUI();
+  };
+
+  cpEl('cpHexIn').oninput=()=>{
+    const raw=cpEl('cpHexIn').value.trim();
+    const hex=raw.startsWith('#')?raw:'#'+raw;
+    if(/^#[0-9a-fA-F]{6}$/.test(hex)){
+      const [h,s,b]=hexToHsb(hex);
+      cpHue=h; cpSat=s; cpBrightness=b;
+      cpHasColour=true;
+      cpCurrentName='';
+      cpEl('cpBright').value=Math.round(b*100);
+      cpUpdateBrightSlider();
+      drawWheel();
+      cpEl('cpSwatchNew').style.background=hex;
+      cpEl('cpSwatchNew').innerHTML='';
+      cpEl('cpColourName').textContent='—';
+      updateCursor();
+    }
+  };
+
+  cpEl('cpPantoneIn').onkeydown=e=>{if(e.key==='Enter')lookupPantone();};
+
+  // Wheel drag
+  const wheel=cpEl('cpWheel');
+  wheel.onmousedown=e=>{e.preventDefault();cpDragging=true;cpWheelMove(e);};
+  window.addEventListener('mousemove',cpWheelDrag);
+  window.addEventListener('mouseup',cpWheelUp);
+}
+
+function cpSetOrigSwatch(swatchUrl, hex){
+  const el=cpEl('cpSwatchOrig');
+  el.innerHTML='';
+  el.style.cssText='';
+  if(swatchUrl){
+    const img=document.createElement('img');
+    img.src=swatchUrl;
+    img.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';
+    img.onerror=()=>{el.innerHTML='';el.style.background='var(--s2)';};
+    el.appendChild(img);
+  } else {
+    // No swatch image — show a clear/blank placeholder
+    el.style.background='var(--s2)';
+    el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:10px;color:var(--tm);font-family:monospace;letter-spacing:.5px">No swatch</div>';
+  }
+}
+
+function cpUpdateBrightSlider(){
+  // Style the range track as a gradient from dark to bright at current hue
+  const hue=cpHue;
+  const slider=cpEl('cpBright');
+  slider.style.background=`linear-gradient(to right, #000, hsl(${hue},80%,50%))`;
+}
+
+
+function cpWheelDrag(e){if(cpDragging)cpWheelMove(e);}
+function cpWheelUp(){cpDragging=false;}
+
+function cpWheelMove(e){
+  const wheel=cpEl('cpWheel');
+  const rect=wheel.getBoundingClientRect();
+  const x=(e.clientX-rect.left)*(240/rect.width)-120;
+  const y=(e.clientY-rect.top)*(240/rect.height)-120;
+  cpHue=(Math.atan2(y,x)*180/Math.PI+360)%360;
+  cpSat=Math.min(1,Math.sqrt(x*x+y*y)/118);
+  cpHasColour=true;
+  cpCurrentName='';
+  cpUpdateBrightSlider();
+  cpSyncUI();
+}
+
+function cpSyncUI(){
+  const newEl=cpEl('cpSwatchNew');
+  if(cpHasColour){
+    const hex=hsbToHex(cpHue,cpSat,cpBrightness);
+    cpEl('cpHexIn').value=hex.toUpperCase();
+    newEl.style.background=hex;
+    newEl.innerHTML='';
+  } else {
+    cpEl('cpHexIn').value='';
+    newEl.style.background='var(--s2)';
+    newEl.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:10px;color:var(--tm);font-family:monospace;letter-spacing:.5px">Pick colour</div>';
+  }
+  cpEl('cpColourName').textContent=cpCurrentName||'—';
+  updateCursor();
+}
+
+function resetCp(){
+  cpHue=cpOriginal.hue; cpSat=cpOriginal.sat; cpBrightness=cpOriginal.brightness;
+  cpHasColour=false;
+  cpCurrentName=cpOriginal.name;
+  cpEl('cpBright').value=Math.round(cpOriginal.brightness*100);
+  cpEl('cpPantoneIn').value='';
+  cpUpdateBrightSlider();
+  drawWheel();
+  cpSyncUI();
+  cpEl('cpOrigName').textContent=cpOriginal.name||'—';
+  cpSetOrigSwatch(cpOriginal.swatchUrl, null);
+  toast('Reset to original colour','info');
+}
+
+function drawWheel(){
+  const canvas=cpEl('cpWheel');
+  const ctx=canvas.getContext('2d');
+  const cx=120,cy=120,r=118;
+  ctx.clearRect(0,0,240,240);
+  for(let a=0;a<360;a++){
+    const grad=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+    grad.addColorStop(0,`hsl(${a},0%,${cpBrightness*100}%)`);
+    grad.addColorStop(1,`hsl(${a},100%,${cpBrightness*50}%)`);
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,(a-1)*Math.PI/180,(a+1)*Math.PI/180);
+    ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  }
+  if(cpBrightness<1){
+    ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);
+    ctx.fillStyle=`rgba(0,0,0,${1-cpBrightness})`;ctx.fill();
+  }
+  updateCursor();
+}
+
+function updateCursor(){
+  const cur=cpEl('cpCursor');
+  if(!cur)return;
+  const x=120+cpSat*118*Math.cos(cpHue*Math.PI/180);
+  const y=120+cpSat*118*Math.sin(cpHue*Math.PI/180);
+  cur.style.left=(x/240*100)+'%';
+  cur.style.top=(y/240*100)+'%';
+}
+
+function maybeCpClose(e){if(e.target===cpEl('cpOverlay'))closeCp();}
+function closeCp(){
+  cpEl('cpOverlay').classList.remove('open');
+  window.removeEventListener('mousemove',cpWheelDrag);
+  window.removeEventListener('mouseup',cpWheelUp);
+  cpDragging=false;
+  cpRec=null;
+}
+
+function confirmCp(){
+  const hex=cpEl('cpHexIn').value.trim().toUpperCase();
+  if(!/^#[0-9A-F]{6}$/.test(hex)){toast('Invalid hex code','error');return;}
+  toast('Colour set to '+hex,'success');
+  closeCp();
+}
+
+function cpCopy(which){
+  const val=cpEl('cpHexIn').value;
+  navigator.clipboard.writeText(val).then(()=>toast('Copied '+val,'success')).catch(()=>toast('Copy failed','error'));
+}
+
+// ── PANTONE LOOKUP ────────────────────────────────────────────────────────────
+async function lookupPantone(){
+  const query=cpEl('cpPantoneIn').value.trim();
+  if(!query){toast('Enter a Pantone name or number','error');return;}
+  if(!cfg.anthropicKey){toast('Add your Anthropic API key in ⚙ Settings to use Pantone lookup','error');return;}
+  const btn=cpEl('cpPantoneBtn');
+  btn.textContent='Searching...';btn.disabled=true;
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':cfg.anthropicKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:200,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        system:'You are a colour expert. Search the web for the exact hex code of the given Pantone colour. Respond with ONLY a JSON object, no markdown, no explanation: {"name":"full official Pantone name","hex":"#RRGGBB"}. If not found respond: {"name":"","hex":""}',
+        messages:[{role:'user',content:'What is the hex code for Pantone '+query+'?'}]
+      })
+    });
+    if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e.error?.message||'API error '+resp.status);}
+    const data=await resp.json();
+    let text='';
+    for(const block of(data.content||[])){if(block.type==='text')text+=block.text;}
+    const m=text.replace(/```[a-z]*/g,'').match(/\{[^{}]+\}/);
+    if(!m)throw new Error('No JSON in response');
+    const result=JSON.parse(m[0]);
+    if(!result.hex){toast('Pantone not found — try a different code','error');return;}
+    const hex=result.hex.startsWith('#')?result.hex:'#'+result.hex;
+    // Apply to wheel
+    const [h,s,b]=hexToHsb(hex);
+    cpHue=h; cpSat=s; cpBrightness=b;
+    cpHasColour=true;
+    cpCurrentName=result.name||query;
+    cpEl('cpBright').value=Math.round(b*100);
+    drawWheel();
+    cpSyncUI();
+  }catch(e){
+    toast('Lookup failed: '+e.message,'error');
+  }finally{
+    btn.textContent='Look up';btn.disabled=false;
+  }
+}
+
+// Colour conversion helpers
+function hsbToHex(h,s,b){
+  const hh=h/60,i=Math.floor(hh),f=hh-i;
+  const p=b*(1-s),q=b*(1-s*f),t=b*(1-s*(1-f));
+  let r,g,bl;
+  switch(i%6){case 0:r=b;g=t;bl=p;break;case 1:r=q;g=b;bl=p;break;case 2:r=p;g=b;bl=t;break;case 3:r=p;g=q;bl=b;break;case 4:r=t;g=p;bl=b;break;default:r=b;g=p;bl=q;}
+  return '#'+[r,g,bl].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('');
+}
+
+function hexToHsb(hex){
+  let r=parseInt(hex.slice(1,3),16)/255;
+  let g=parseInt(hex.slice(3,5),16)/255;
+  let b=parseInt(hex.slice(5,7),16)/255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min;
+  let h=0,s=max===0?0:d/max,bv=max;
+  if(d){
+    if(max===r)h=((g-b)/d+6)%6;
+    else if(max===g)h=(b-r)/d+2;
+    else h=(r-g)/d+4;
+    h*=60;
+  }
+  return [h,s,bv];
+}
+
+// ── IMAGE MODAL ────────────────────────────────────────────────────────────────
+let imgModalRec=null;       // record being edited
+let imgModalFieldName=null; // attachment field name we're replacing
+let imgModalPendingFile=null; // File object staged for upload
+let imgModalDeletePending=false; // whether user hit Remove
+
+function openImgModal(rec){
+  imgModalRec=rec;
+  imgModalPendingFile=null;
+  imgModalDeletePending=false;
+
+  // Determine which attachment field to use — prefer Sample Artwork, fallback to first img field
+  const preferred=['Sample Artwork','Sample CAD'];
+  imgModalFieldName=preferred.find(n=>rec.fields[n]?.length) || imgFlds().find(n=>rec.fields[n]?.length) || 'Sample Artwork';
+
+  const nf=nameFld();
+  document.getElementById('imgModalTitle').textContent=(rec.fields[nf]||'Image').toUpperCase();
+
+  imgModalRenderPreview();
+  imgModalClearPending();
+
+  // Setup drag-and-drop on dropzone
+  const dz=document.getElementById('imgModalDropzone');
+  dz.ondragover=e=>{e.preventDefault();dz.classList.add('dragover');};
+  dz.ondragleave=()=>dz.classList.remove('dragover');
+  dz.ondrop=e=>{
+    e.preventDefault();dz.classList.remove('dragover');
+    const f=e.dataTransfer.files[0];
+    if(f&&f.type.startsWith('image/'))imgModalStageFile(f);
+  };
+
+  document.getElementById('imgModalOverlay').classList.add('open');
+}
+
+function imgModalRenderPreview(){
+  const preview=document.getElementById('imgModalPreview');
+  const noImg=document.getElementById('imgModalNoImg');
+  const delBtn=document.getElementById('imgModalDeleteBtn');
+
+  // Clear existing img if any
+  preview.querySelectorAll('img').forEach(i=>i.remove());
+
+  if(imgModalDeletePending){
+    noImg.style.display='';
+    delBtn.style.display='none';
+    return;
+  }
+
+  const attachments=imgModalRec?.fields[imgModalFieldName];
+  const url=Array.isArray(attachments)&&attachments.length ? attachments[0].url : null;
+
+  if(url){
+    noImg.style.display='none';
+    const img=document.createElement('img');
+    img.src=url;
+    preview.insertBefore(img, delBtn);
+    delBtn.style.display='';
+  } else {
+    noImg.style.display='';
+    delBtn.style.display='none';
+  }
+}
+
+function imgModalDelete(){
+  imgModalDeletePending=true;
+  imgModalPendingFile=null;
+  imgModalRenderPreview();
+  imgModalClearPending();
+}
+
+function imgModalFilePicked(e){
+  const f=e.target.files[0];
+  if(f)imgModalStageFile(f);
+  e.target.value=''; // reset so same file can be picked again
+}
+
+function imgModalStageFile(file){
+  imgModalPendingFile=file;
+  imgModalDeletePending=false;
+
+  // Show preview of pending file
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const thumb=document.getElementById('imgModalPendingThumb');
+    thumb.src=ev.target.result;
+    // Also update the main preview to the new image
+    const preview=document.getElementById('imgModalPreview');
+    const noImg=document.getElementById('imgModalNoImg');
+    const delBtn=document.getElementById('imgModalDeleteBtn');
+    preview.querySelectorAll('img:not(#imgModalPendingThumb)').forEach(i=>i.remove());
+    noImg.style.display='none';
+    const img=document.createElement('img');
+    img.src=ev.target.result;
+    preview.insertBefore(img,delBtn);
+    delBtn.style.display='';
+  };
+  reader.readAsDataURL(file);
+
+  document.getElementById('imgModalPendingName').textContent=file.name;
+  document.getElementById('imgModalPending').style.display='flex';
+}
+
+function imgModalClearPending(){
+  imgModalPendingFile=null;
+  document.getElementById('imgModalPending').style.display='none';
+  document.getElementById('imgModalPendingThumb').src='';
+  document.getElementById('imgModalPendingName').textContent='';
+}
+
+function imgModalMaybeClose(e){
+  if(e.target===document.getElementById('imgModalOverlay'))closeImgModal();
+}
+
+function closeImgModal(){
+  document.getElementById('imgModalOverlay').classList.remove('open');
+  imgModalRec=null;imgModalPendingFile=null;imgModalDeletePending=false;
+}
+
+async function imgModalSave(){
+  if(!imgModalRec)return;
+  const btn=document.getElementById('imgModalSaveBtn');
+  btn.disabled=true;btn.textContent='Saving...';
+
+  try{
+    if(imgModalDeletePending && !imgModalPendingFile){
+      // Clear the attachment field
+      const res=await atPatch(`/v0/${cfg.baseId}/${styleTblId}/${imgModalRec.id}`,{fields:{[imgModalFieldName]:[]}});
+      const idx=styleRecs.findIndex(r=>r.id===imgModalRec.id);
+      if(idx>-1)styleRecs[idx].fields={...styleRecs[idx].fields,...res.fields};
+      toast('Image removed','success');
+      closeImgModal();
+      openDetail(imgModalRec.id); // refresh panel
+      renderProducts();
+      return;
+    }
+
+    if(imgModalPendingFile){
+      // Upload via Airtable attachment upload — encode to base64 and use
+      // Airtable's multipart upload endpoint to get a signed URL, then PATCH
+      setSyn('syn','Uploading...');
+
+      // Read file as base64 data URL
+      const dataUrl=await new Promise((res,rej)=>{
+        const fr=new FileReader();
+        fr.onload=()=>res(fr.result);
+        fr.onerror=rej;
+        fr.readAsDataURL(imgModalPendingFile);
+      });
+
+      // Airtable attachment upload: POST to /v0/{baseId}/{tableId}/{recId}/uploadAttachment/{fieldId}
+      // We need the field ID, not name — look it up
+      const fieldMeta=styleFields.find(f=>f.name===imgModalFieldName);
+      if(!fieldMeta){throw new Error(`Cannot find field metadata for "${imgModalFieldName}"`);}
+
+      const uploadRes=await fetch(
+        `${AT}/v0/${cfg.baseId}/${styleTblId}/${imgModalRec.id}/uploadAttachment/${fieldMeta.id}`,
+        {
+          method:'POST',
+          headers:{'Authorization':`Bearer ${cfg.token}`,'Content-Type':'application/json'},
+          body:JSON.stringify({
+            contentType:imgModalPendingFile.type||'image/jpeg',
+            filename:imgModalPendingFile.name,
+            file:dataUrl.split(',')[1] // base64 only
+          })
+        }
+      );
+      if(!uploadRes.ok){
+        const err=await uploadRes.json().catch(()=>({}));
+        throw new Error(err.error?.message||`Upload failed (${uploadRes.status})`);
+      }
+      const uploadData=await uploadRes.json();
+
+      // Refresh local record with updated attachment list
+      const refreshed=await atGet(`/v0/${cfg.baseId}/${styleTblId}/${imgModalRec.id}`);
+      const idx=styleRecs.findIndex(r=>r.id===imgModalRec.id);
+      if(idx>-1)styleRecs[idx].fields={...styleRecs[idx].fields,...refreshed.fields};
+
+      setSyn('ok','Uploaded');
+      toast('Image updated ✓','success');
+      closeImgModal();
+      openDetail(imgModalRec.id);
+      renderProducts();
+      return;
+    }
+
+    // Nothing changed
+    closeImgModal();
+
+  }catch(e){
+    setSyn('err','Upload failed');
+    toast('Error: '+e.message,'error');
+  }finally{
+    btn.disabled=false;btn.textContent='Save';
+  }
+}
+
+// ── DETAIL PANEL ──────────────────────────────────────────────────────────────
+function openDetail(id){
+  activeRec=styleRecs.find(r=>r.id===id);if(!activeRec)return;
+  pendingChanges={};
+  const nf=nameFld();
+  document.getElementById('dTitle').textContent=activeRec.fields[nf]||'Properties';
+  const img=firstImg(activeRec),iw=document.getElementById('dImgW');
+  if(img){
+    iw.style.display='flex';
+    iw.innerHTML=`<img src="${img}">`;
+    iw.onclick=()=>openImgModal(activeRec);
+    iw.title='Click to view or replace image';
+  } else {
+    iw.style.display='none';
+    iw.onclick=()=>openImgModal(activeRec);
+    iw.style.display='flex';
+    iw.style.minHeight='60px';
+    iw.innerHTML=`<div style="font-size:11px;color:var(--tm);font-family:monospace;cursor:pointer">+ Add image</div>`;
+  }
+  const con=document.getElementById('dFields');con.innerHTML='';
+  const fieldMap={};for(const f of styleFields)fieldMap[f.name]=f;
+  for(const fname of PROP_FIELDS){
+    const f=fieldMap[fname],val=activeRec.fields[fname];
+    const div=document.createElement('div');div.className='dfield';
+    const lbl=document.createElement('label');lbl.textContent=fname;div.appendChild(lbl);
+    if(!f){
+      const sp=document.createElement('div');sp.className='val readonly';sp.textContent='—';div.appendChild(sp);
+    } else if(f.type==='singleSelect'&&f.options?.choices){
+      const sel=document.createElement('select');sel.className='val';
+      sel.innerHTML='<option value="">—</option>'+f.options.choices.map(c=>`<option value="${c.name}"${val===c.name?' selected':''}>${c.name}</option>`).join('');
+      sel.onchange=()=>{pendingChanges[fname]=sel.value||null;};div.appendChild(sel);
+    } else if(f.type==='multipleAttachments'){
+      const sp=document.createElement('div');sp.className='val readonly';
+      sp.innerHTML=Array.isArray(val)&&val.length?val.map(a=>`<a href="${a.url}" target="_blank" style="color:var(--a);text-decoration:none;display:block;font-size:11px;margin-bottom:2px">${a.filename||'File'} ↗</a>`).join(''):'—';
+      div.appendChild(sp);
+    } else if(['multipleRecordLinks','lookup','formula','rollup','count','autoNumber','createdTime','lastModifiedTime'].includes(f.type)){
+      const sp=document.createElement('div');sp.className='val readonly';sp.textContent=fmtVal(val)||'—';div.appendChild(sp);
+    } else {
+      const inp=document.createElement('div');inp.className='val editable';inp.contentEditable='true';inp.textContent=fmtVal(val);
+      inp.oninput=()=>{let v=inp.textContent;if(['number','currency','percent'].includes(f.type))v=parseFloat(v)||0;pendingChanges[fname]=v;};
+      div.appendChild(inp);
+    }
+    con.appendChild(div);
+  }
+  document.getElementById('dOverlay').classList.add('open');
+}
+function maybeCloseDetail(e){if(e.target===document.getElementById('dOverlay'))closeDetail();}
+function closeDetail(){document.getElementById('dOverlay').classList.remove('open');activeRec=null;pendingChanges={};}
+
+async function saveRecord(){
+  if(!activeRec||!Object.keys(pendingChanges).length){toast('No changes to save','info');closeDetail();return;}
+  const pantoneChanged='Pantone Colour' in pendingChanges;
+  const recId=activeRec.id;
+  const newPantone=pendingChanges['Pantone Colour'];
+  const btn=document.getElementById('saveBtn');btn.textContent='Saving...';btn.disabled=true;setSyn('syn','Saving...');
+  try{
+    const res=await atPatch(`/v0/${cfg.baseId}/${styleTblId}/${recId}`,{fields:pendingChanges});
+    const idx=styleRecs.findIndex(r=>r.id===recId);
+    if(idx>-1)styleRecs[idx].fields={...styleRecs[idx].fields,...res.fields};
+    setSyn('ok','Saved');toast('Saved ✓','success');closeDetail();renderProducts();
+    if(pantoneChanged&&newPantone){
+      const rec=styleRecs.find(r=>r.id===recId);
+      if(rec)recolourRecord(rec,newPantone);
+    }
+  }catch(e){setSyn('err','Save failed');toast('Save failed: '+e.message,'error');}
+  finally{btn.textContent='Save Changes';btn.disabled=false;}
+}
+
+async function recolourRecord(rec, pantone){
+  if(!cfg.driveFolderId){toast('Set a Drive Folder ID in Settings to enable recolouring','error');return;}
+  let imgUrl=null;
+  for(const fn of imgFlds()){const v=rec.fields[fn];if(v?.length){imgUrl=v[0].url;break;}}
+  if(!imgUrl){toast('No image found to recolour','error');return;}
+  toast(`Recolouring to ${pantone}...`,'info');
+  setSyn('syn','Recolouring...');
+  try{
+    // Fetch image in browser (Airtable CDN supports CORS), encode as base64
+    const imgResp=await fetch(imgUrl,{mode:'cors',cache:'no-store'});
+    if(!imgResp.ok)throw new Error('Could not fetch image (HTTP '+imgResp.status+')');
+    const blob=await imgResp.blob();
+    const mimeType=blob.type||'image/jpeg';
+    const base64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result.split(',')[1]);fr.onerror=rej;fr.readAsDataURL(blob);});
+
+    // Step 1: upload image to Drive to get a fileId
+    const uploadResp=await fetch(`${GEMINI_SERVER}/upload`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({folderId:cfg.driveFolderId,fileName:`drp-source-${rec.id}-${Date.now()}.jpg`,mimeType,base64})});
+    const uploadData=await uploadResp.json();
+    if(!uploadResp.ok||!uploadData.ok)throw new Error(uploadData.error||`Upload error ${uploadResp.status}`);
+    const sourceFileId=uploadData.file.id;
+
+    // Step 2: send to Gemini with detailed recolour prompt
+    const outFileName=`recolour-${pantone.replace(/\s+/g,'-')}-${Date.now()}.jpg`;
+    const prompt=`This is a flat-lay or on-model photograph of a fashion garment. Recolour the garment to exactly match Pantone ${pantone}. Preserve every detail: the garment shape, cut, fabric texture, stitching, any patterns or prints (recoloured to the new base colour), the model or mannequin if present, and the background. Do not change anything except the colour of the garment itself.`;
+    const genResp=await fetch(`${GEMINI_SERVER}/generate-and-save`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sourceFileId,targetFolderId:cfg.driveFolderId,prompt,outFileName,aspectRatio:'2:3',imageSize:'4K',airtableBaseId:cfg.baseId,airtableRecordId:rec.id,airtableAttachmentField:'Sample CAD'})});
+    const genData=await genResp.json();
+    if(!genResp.ok||!genData.ok)throw new Error(genData.error||`Generate error ${genResp.status}`);
+
+    // Refresh record from Airtable to pick up new Sample CAD attachment
+    const idx=styleRecs.findIndex(x=>x.id===rec.id);
+    if(idx>-1){
+      const fresh=await atGet(`/v0/${cfg.baseId}/${styleTblId}/${rec.id}`);
+      styleRecs[idx].fields={...styleRecs[idx].fields,...fresh.fields};
+      renderProducts();
+    }
+    setSyn('ok','Recolour complete');toast(`Recolour saved to Sample CAD`,'success');
+  }catch(e){
+    setSyn('err','Recolour failed');
+    toast(`Recolour failed: ${e.message}`,'error');
+  }
+}
+
+function openSettings(){document.getElementById('sTok').value=cfg.token;document.getElementById('sBase').value=cfg.baseId;document.getElementById('sDrive').value=cfg.driveFolderId||'';document.getElementById('sAnthropicKey').value=cfg.anthropicKey||'';document.getElementById('sSerpKey').value=cfg.serpApiKey||'';document.getElementById('sOverlay').classList.add('open');}
+function maybeCloseSett(e){if(e.target===document.getElementById('sOverlay'))closeSett();}
+function closeSett(){document.getElementById('sOverlay').classList.remove('open');}
+function updateSett(){cfg.token=document.getElementById('sTok').value.trim();cfg.baseId=document.getElementById('sBase').value.trim();cfg.driveFolderId=document.getElementById('sDrive').value.trim();cfg.anthropicKey=document.getElementById('sAnthropicKey').value.trim();cfg.serpApiKey=document.getElementById('sSerpKey').value.trim();localStorage.setItem('drp3_cfg',JSON.stringify(cfg));closeSett();connect();}
+
+async function atGet(path){
+  const r=await fetch(AT+path,{headers:{Authorization:`Bearer ${cfg.token}`}});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${r.status}`);}return r.json();
+}
+async function atPatch(path,body){
+  const r=await fetch(AT+path,{method:'PATCH',headers:{Authorization:`Bearer ${cfg.token}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${r.status}`);}return r.json();
+}
+function setSyn(state,label){
+  document.getElementById('dot').className='dot'+(state==='syn'?' syn':state==='ok'?' ok':state==='err'?' err':'');
+  document.getElementById('syncLbl').textContent=label;
+}
+function toast(msg,type='info'){
+  const t=document.createElement('div');t.className=`toast ${type}`;t.textContent=msg;
+  document.getElementById('tc').appendChild(t);setTimeout(()=>t.remove(),3500);
+}
+// ── PANTONE SWATCH BAR ────────────────────────────────────────────────────────
+function toTitleCase(str){
+  const small=new Set(['a','an','the','and','but','or','for','nor','on','at','to','by','in','of','up','as','is']);
+  return str.toLowerCase().replace(/[^\s-]+/g,(word,i)=>
+    (i===0||!small.has(word))?word.charAt(0).toUpperCase()+word.slice(1):word
+  );
+}
+let pbarOnCanvas=false;
+let pbarDragging=false,pbarDX=0,pbarDY=0,pbarOX=0,pbarOY=0;
+
+function buildPantoneBar(){
+  const container=document.getElementById('pbarSwatches');
+  container.innerHTML='';
+  // Build deduplicated map: pantone label -> first swatchUrl found
+  const map=new Map();
+  for(const r of styleRecs){
+    const p=String(r.fields['Pantone Colour']||'').trim();
+    const d=String(r.fields['Descriptive Colour']||'').trim();
+    const label=p||d;
+    if(!label)continue;
+    if(!map.has(label)){
+      const sw=r.fields['Colour Swatch'];
+      const url=(Array.isArray(sw)&&sw.length)?sw[0].url:null;
+      map.set(label,{url,descriptive:d||p});
+    }
+  }
+  if(!map.size)return;
+  // Sort alphabetically
+  const sorted=[...map.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+  for(const [label,{url,descriptive}] of sorted){
+    const chip=document.createElement('div');
+    chip.className='pswatch';
+    chip.title=label;
+    const displayLabel=toTitleCase(descriptive||label);
+    const inner=url
+      ?`<div class="pswatch-chip"><img src="${url}" loading="lazy"></div>`
+      :`<div class="pswatch-chip" style="background:var(--s2)"></div>`;
+    chip.innerHTML=inner+`<div class="pswatch-label">${displayLabel}</div>`;
+    chip.onclick=()=>{
+      // Filter canvas to this colour
+      const fi=document.getElementById('fInput');
+      fi.value=label;
+      renderProducts();
+    };
+    container.appendChild(chip);
+  }
+  document.getElementById('paletteBtn').style.display='';
+}
+
+function showPantoneBar(){
+  buildPantoneBar();
+  const bar=document.getElementById('pantoneBar');
+  bar.classList.add('visible');
+  bar.classList.remove('on-canvas');
+  pbarOnCanvas=false;
+  bar.style.left='';bar.style.top='';bar.style.bottom='20px';
+  bar.style.transform='translateX(-50%)';
+  document.getElementById('pbarModeBtn').textContent='⊞ Attach';
+  setupPbarDrag();
+}
+
+function hidePantoneBar(){
+  document.getElementById('pantoneBar').classList.remove('visible');
+}
+
+function togglePbarMode(){
+  const bar=document.getElementById('pantoneBar');
+  pbarOnCanvas=!pbarOnCanvas;
+  const btn=document.getElementById('pbarModeBtn');
+  if(pbarOnCanvas){
+    // Place it on canvas at a sensible canvas-space position
+    bar.classList.add('on-canvas');
+    const cw=document.getElementById('canvasWrap');
+    if(!cw||cw.style.display==='none'){
+      // Not on canvas view — stay floating
+      pbarOnCanvas=false;bar.classList.remove('on-canvas');btn.textContent='⊞ Attach';return;
+    }
+    const rect=cw.getBoundingClientRect();
+    // Convert viewport bottom-centre into canvas position
+    const vx=rect.width/2-100, vy=rect.height-160;
+    const cx=(vx-panX)/zoom, cy=(vy-panY)/zoom;
+    bar.style.left=cx+'px'; bar.style.top=cy+'px';
+    bar.style.bottom=''; bar.style.transform='none';
+    // Reparent to canvas
+    document.getElementById('canvas').appendChild(bar);
+    btn.textContent='⊟ Detach';
+  } else {
+    // Return to fixed overlay
+    bar.classList.remove('on-canvas');
+    bar.style.left=''; bar.style.top=''; bar.style.bottom='20px';
+    bar.style.transform='translateX(-50%)';
+    document.getElementById('app').appendChild(bar);
+    btn.textContent='⊞ Attach';
+    setupPbarDrag();
+  }
+}
+
+function setupPbarDrag(){
+  const bar=document.getElementById('pantoneBar');
+  bar.onmousedown=e=>{
+    // Only drag on the bar itself, not on swatch chips or buttons
+    if(e.target.closest('.pswatch')||e.target.closest('.pbar-btn'))return;
+    pbarDragging=true;
+    pbarDX=e.clientX; pbarDY=e.clientY;
+    const rect=bar.getBoundingClientRect();
+    pbarOX=rect.left; pbarOY=rect.top;
+    e.preventDefault();
+  };
+  window.addEventListener('mousemove',onPbarMove);
+  window.addEventListener('mouseup',()=>{pbarDragging=false;});
+}
+
+function onPbarMove(e){
+  if(!pbarDragging||pbarOnCanvas)return;
+  const bar=document.getElementById('pantoneBar');
+  const nx=pbarOX+(e.clientX-pbarDX);
+  const ny=pbarOY+(e.clientY-pbarDY);
+  bar.style.left=nx+'px';
+  bar.style.top=ny+'px';
+  bar.style.bottom='auto';
+  bar.style.transform='none';
+}
+
+// ── PANTONE LOOKUP MODAL (from colours table) ─────────────────────────────────
+let pantLookupPantone='';
+let pantLookupStyles=[];
+let pantLookupFoundCode='';   // "NN-NNNN TCX" — saved to "Pantone Colour" field
+let pantLookupFoundImgUrl=''; // direct image URL — uploaded to "Colour Swatch" field
+
+function openPantLookup(pantoneLabel, existingSwatchUrl, styles){
+  pantLookupPantone=pantoneLabel;
+  pantLookupStyles=styles||[];
+  pantLookupFoundCode='';
+  pantLookupFoundImgUrl='';
+
+  document.getElementById('pantLookupTitle').textContent=('◈ '+(pantoneLabel||'PANTONE LOOKUP')).toUpperCase();
+  document.getElementById('pantLookupErr').style.display='none';
+  document.getElementById('pantLookupErr').textContent='';
+  document.getElementById('pantLookupIn').value=pantoneLabel||'';
+  document.getElementById('pantLookupSaveBtnFooter').style.display='none';
+  document.getElementById('pantLookupResultWrap').style.display='none';
+
+  // If an existing swatch is on record, pre-show it
+  if(existingSwatchUrl){
+    document.getElementById('pantLookupSwatchImg').src=existingSwatchUrl;
+    document.getElementById('pantLookupSwatch').style.background='';
+    document.getElementById('pantLookupCodeOut').value=pantoneLabel||'';
+    document.getElementById('pantLookupNameResult').textContent='';
+    document.getElementById('pantLookupResultWrap').style.display='flex';
+  }
+
+  document.getElementById('pantLookupOverlay').classList.add('open');
+  const inp=document.getElementById('pantLookupIn');
+  inp.focus();
+  inp.onkeydown=e=>{if(e.key==='Enter')doPantLookup();};
+}
+
+function closePantLookup(){
+  document.getElementById('pantLookupOverlay').classList.remove('open');
+}
+
+async function doPantLookup(){
+  const query=document.getElementById('pantLookupIn').value.trim();
+  if(!query) return;
+
+  const errEl=document.getElementById('pantLookupErr');
+  const btn=document.getElementById('pantLookupBtn');
+  errEl.style.display='none';
+  btn.textContent='Searching...'; btn.disabled=true;
+
+  // Reset result state
+  pantLookupFoundCode='';
+  pantLookupFoundImgUrl='';
+  document.getElementById('pantLookupSaveBtnFooter').style.display='none';
+
+  try{
+    // Step 1: use Claude to get the canonical TCX code and name
+    if(!cfg.anthropicKey) throw new Error('Add your Anthropic API key in ⚙ Settings');
+    const aiResp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':cfg.anthropicKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:150,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        system:'You are a colour expert. Return ONLY a JSON object, no markdown: {"code":"NN-NNNN TCX","name":"Full Pantone Name"}. The code must be in format "NN-NNNN TCX". If not found: {"code":"","name":""}',
+        messages:[{role:'user',content:'What is the Pantone TCX code for: '+query}]
+      })
+    });
+    if(!aiResp.ok){const e=await aiResp.json().catch(()=>({}));throw new Error(e.error?.message||'AI error '+aiResp.status);}
+    const aiData=await aiResp.json();
+    let aiText='';
+    for(const b of(aiData.content||[])){if(b.type==='text')aiText+=b.text;}
+    const aiMatch=aiText.replace(/```[a-z]*/g,'').match(/\{[^{}]+\}/);
+    if(!aiMatch) throw new Error('No result from lookup');
+    const aiResult=JSON.parse(aiMatch[0]);
+    if(!aiResult.code){
+      errEl.textContent='Pantone not found — try a different code or name';
+      errEl.style.display='block';
+      return;
+    }
+
+    const tcxCode=aiResult.code.trim(); // "NN-NNNN TCX"
+    const name=aiResult.name||tcxCode;
+    const codeSlug=tcxCode.replace(/\s+TCX\s*$/i,'').trim(); // "NN-NNNN"
+    const searchQuery=encodeURIComponent(`pantone ${tcxCode} colour swatch`);
+
+    // Step 2: use SerpAPI Google Images to find the swatch image URL
+    let imgUrl='';
+    if(cfg.serpApiKey){
+      try{
+        const serpUrl=`https://serpapi.com/search.json?engine=google_images&q=${searchQuery}&api_key=${cfg.serpApiKey}`;
+        const serpResp=await fetch(serpUrl);
+        if(serpResp.ok){
+          const serpData=await serpResp.json();
+          const results=serpData.images_results||[];
+          // Take first result with a usable image URL
+          imgUrl=results.find(r=>r.original&&r.original.startsWith('http'))?.original || '';
+        }
+      }catch(serpErr){
+        console.warn('SerpAPI error:',serpErr);
+      }
+    }
+
+    pantLookupFoundCode=tcxCode;
+    pantLookupFoundImgUrl=imgUrl;
+
+    // Show result — just set src directly, browser handles cross-origin display fine
+    const swatchImg=document.getElementById('pantLookupSwatchImg');
+    const swatchEl=document.getElementById('pantLookupSwatch');
+    if(imgUrl){
+      swatchImg.style.display='block';
+      swatchImg.src=imgUrl;
+      swatchEl.style.background='';
+    } else {
+      swatchImg.style.display='none';
+      swatchImg.src='';
+      swatchEl.style.background='var(--s2)';
+    }
+
+    document.getElementById('pantLookupCodeOut').value=tcxCode;
+    document.getElementById('pantLookupNameResult').textContent=name;
+    document.getElementById('pantLookupResultWrap').style.display='flex';
+    document.getElementById('pantLookupSaveBtnFooter').style.display='';
+
+  }catch(e){
+    errEl.textContent=e.message;
+    errEl.style.display='block';
+  }finally{
+    btn.textContent='Look up'; btn.disabled=false;
+  }
+}
+
+async function savePantLookup(){
+  const pantoneCode=document.getElementById('pantLookupCodeOut').value.trim();
+  if(!pantoneCode||!pantLookupStyles.length){toast('Nothing to save','info');return;}
+
+  const saveBtnF=document.getElementById('pantLookupSaveBtnFooter');
+  saveBtnF.disabled=true; saveBtnF.textContent='Saving...';
+
+  const ids=pantLookupStyles.map(s=>s.id);
+  const imgUrl=pantLookupFoundImgUrl;
+  const slug=pantoneCode.replace(/\s+TCX\s*$/i,'').trim();
+
+  setSyn('syn',`Saving to ${ids.length} style${ids.length>1?'s':''}...`);
+  let successCount=0, errors=[];
+
+  for(const recId of ids){
+    try{
+      // 1. Save swatch image to "Colour Swatch" — pass the URL directly to Airtable
+      // Airtable's PATCH attachments API accepts {url, filename} objects directly;
+      // it fetches the image server-side so CORS is not an issue.
+      if(imgUrl){
+        const ext=imgUrl.match(/\.(webp|png|jpg|jpeg)/i)?.[1]||'jpg';
+        await atPatch(`/v0/${cfg.baseId}/${styleTblId}/${recId}`,{
+          fields:{'Colour Swatch':[{url:imgUrl,filename:`${slug}.${ext}`}]}
+        });
+      }
+
+      // 2. Patch "Pantone Colour" text field with the TCX code
+      const patchRes=await atPatch(`/v0/${cfg.baseId}/${styleTblId}/${recId}`,{fields:{'Pantone Colour':pantoneCode}});
+      const idx=styleRecs.findIndex(r=>r.id===recId);
+      if(idx>-1)styleRecs[idx].fields={...styleRecs[idx].fields,...patchRes.fields};
+
+      // 3. Refresh to pick up new attachment
+      const fresh=await atGet(`/v0/${cfg.baseId}/${styleTblId}/${recId}`);
+      const idx2=styleRecs.findIndex(r=>r.id===recId);
+      if(idx2>-1)styleRecs[idx2].fields={...styleRecs[idx2].fields,...fresh.fields};
+
+      successCount++;
+    }catch(e){
+      errors.push(e.message);
+    }
+  }
+
+  saveBtnF.disabled=false; saveBtnF.textContent='Save';
+
+  if(errors.length){
+    setSyn('err','Some saves failed');
+    toast(`Saved ${successCount}, failed ${errors.length}: ${errors[0]}`,'error');
+  } else {
+    setSyn('ok',`Saved ${successCount} style${successCount>1?'s':''}`);
+    toast(`Saved on ${successCount} style${successCount>1?'s':''} ✓`,'success');
+    closePantLookup();
+    renderColours();
+  }
+}
+
+// ─── GOOGLE DRIVE INTEGRATION ───────────────────────────────────────────────
+const GDRIVE_CLIENT_ID = '683245251133-8qdhgl3noalvopdses38rvvj734142m4.apps.googleusercontent.com';
+const GDRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const GDRIVE_FILE_NAME = 'dynamic-range-plan-layout.json';
+let gdriveToken = null;
+let gdriveTokenClient = null;
+
+function gdriveInit() {
+  // Load Google Identity Services
+  if (window.google && window.google.accounts) { gdriveInitClient(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://accounts.google.com/gsi/client';
+  s.onload = gdriveInitClient;
+  s.onerror = () => toast('Failed to load Google sign-in library', 'error');
+  document.head.appendChild(s);
+}
+
+function gdriveInitClient() {
+  gdriveTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GDRIVE_CLIENT_ID,
+    scope: GDRIVE_SCOPES,
+    callback: (resp) => {
+      if (resp.error) { toast('Drive auth failed: ' + resp.error, 'error'); return; }
+      gdriveToken = resp.access_token;
+      localStorage.setItem('drp_gdrive_token', gdriveToken);
+      gdriveSetConnected(true);
+      toast('Google Drive connected ✓', 'success');
+    }
+  });
+  // Restore token if previously saved
+  const saved = localStorage.getItem('drp_gdrive_token');
+  if (saved) { gdriveToken = saved; gdriveSetConnected(true); }
+}
+
+function gdriveAuth() {
+  if (!gdriveTokenClient) { gdriveInit(); setTimeout(gdriveAuth, 800); return; }
+  gdriveTokenClient.requestAccessToken();
+}
+
+function gdriveSetConnected(yes) {
+  const btn = document.getElementById('gdriveConnBtn');
+  const saveBtn = document.getElementById('gdriveSaveBtn');
+  const loadBtn = document.getElementById('gdriveLoadBtn');
+  if (yes) {
+    btn.textContent = '✓ Drive Connected';
+    btn.classList.add('connected');
+    saveBtn.style.display = '';
+    loadBtn.style.display = '';
+  } else {
+    btn.textContent = '☁ Connect Drive';
+    btn.classList.remove('connected');
+    saveBtn.style.display = 'none';
+    loadBtn.style.display = 'none';
+  }
+}
+
+function gdriveGetLayoutData() {
+  // Capture canvas card positions + zoom/pan state
+  const cards = [...document.querySelectorAll('#canvas .card')].map(c => ({
+    id: c.dataset.id,
+    left: c.style.left,
+    top: c.style.top,
+    zIndex: c.style.zIndex
+  }));
+  const gcards = [...document.querySelectorAll('.grouped-canvas .gcard')].map(c => ({
+    id: c.dataset.id,
+    left: c.style.left,
+    top: c.style.top
+  }));
+  return {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    brand: document.getElementById('brandSel')?.value || '',
+    collection: document.getElementById('collSel')?.value || '',
+    cards,
+    gcards,
+    canvasPan: window._canvasPan || null,
+    canvasZoom: window._canvasZoom || null
+  };
+}
+
+async function gdriveSave() {
+  if (!gdriveToken) { toast('Connect Google Drive first', 'info'); return; }
+  const btn = document.getElementById('gdriveSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  setSyn('syn', 'Saving to Drive...');
+  try {
+    const data = JSON.stringify(gdriveGetLayoutData(), null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    // Check if file already exists
+    const searchResp = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=name='${GDRIVE_FILE_NAME}' and trashed=false&fields=files(id,name)`,
+      { headers: { Authorization: `Bearer ${gdriveToken}` } }
+    );
+    if (!searchResp.ok) throw new Error('Drive search failed');
+    const searchData = await searchResp.json();
+    const existing = searchData.files?.[0];
+    let fileId, resp;
+    if (existing) {
+      // Update existing file
+      resp = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=media`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${gdriveToken}`, 'Content-Type': 'application/json' },
+        body: blob
+      });
+      fileId = existing.id;
+    } else {
+      // Create new file
+      const meta = JSON.stringify({ name: GDRIVE_FILE_NAME, mimeType: 'application/json' });
+      const form = new FormData();
+      form.append('metadata', new Blob([meta], { type: 'application/json' }));
+      form.append('file', blob);
+      resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${gdriveToken}` },
+        body: form
+      });
+    }
+    if (!resp.ok) {
+      const e = await resp.json().catch(() => ({}));
+      if (e.error?.status === 'UNAUTHENTICATED') { gdriveToken = null; gdriveSetConnected(false); throw new Error('Token expired — reconnect Drive'); }
+      throw new Error(e.error?.message || 'Upload failed');
+    }
+    setSyn('ok', 'Saved to Drive');
+    toast('Layout saved to Google Drive ✓', 'success');
+  } catch (e) {
+    setSyn('err', 'Drive save failed');
+    toast('Drive save failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '↑ Drive Save';
+  }
+}
+
+async function gdriveOpenModal() {
+  if (!gdriveToken) { toast('Connect Google Drive first', 'info'); return; }
+  const overlay = document.getElementById('gdriveModal');
+  overlay.classList.add('open');
+  gdriveListFiles();
+}
+
+function gdriveCloseModal() {
+  document.getElementById('gdriveModal').classList.remove('open');
+}
+
+async function gdriveListFiles() {
+  const list = document.getElementById('gdriveFileList');
+  const status = document.getElementById('gdriveModalStatus');
+  list.innerHTML = '<div style="color:var(--tm);font-size:12px;font-family:monospace;padding:12px">Loading...</div>';
+  status.textContent = '';
+  try {
+    const resp = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=name contains 'dynamic-range-plan' and trashed=false&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc`,
+      { headers: { Authorization: `Bearer ${gdriveToken}` } }
+    );
+    if (!resp.ok) throw new Error('Could not list Drive files');
+    const data = await resp.json();
+    const files = data.files || [];
+    if (!files.length) {
+      list.innerHTML = '<div style="color:var(--tm);font-size:12px;font-family:monospace;padding:12px">No saved layouts found in Drive.</div>';
+      return;
+    }
+    list.innerHTML = '';
+    files.forEach(f => {
+      const date = new Date(f.modifiedTime).toLocaleString();
+      const item = document.createElement('div');
+      item.className = 'gdrive-file-item';
+      item.innerHTML = `<div class="gdrive-file-icon">📄</div><div class="gdrive-file-info"><div class="gdrive-file-name">${f.name}</div><div class="gdrive-file-date">Modified: ${date}</div></div>`;
+      item.onclick = () => gdriveLoad(f.id, f.name);
+      list.appendChild(item);
+    });
+  } catch (e) {
+    list.innerHTML = `<div style="color:var(--red);font-size:12px;font-family:monospace;padding:12px">${e.message}</div>`;
+  }
+}
+
+async function gdriveLoad(fileId, fileName) {
+  const status = document.getElementById('gdriveModalStatus');
+  status.textContent = 'Loading...';
+  try {
+    const resp = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+      { headers: { Authorization: `Bearer ${gdriveToken}` } }
+    );
+    if (!resp.ok) throw new Error('Download failed');
+    const layout = await resp.json();
+    gdriveApplyLayout(layout);
+    gdriveCloseModal();
+    toast(`Layout loaded from: ${fileName} ✓`, 'success');
+    setSyn('ok', 'Layout loaded from Drive');
+  } catch (e) {
+    status.textContent = 'Error: ' + e.message;
+    toast('Drive load failed: ' + e.message, 'error');
+  }
+}
+
+function gdriveApplyLayout(layout) {
+  // Apply canvas card positions
+  if (layout.cards) {
+    layout.cards.forEach(c => {
+      const el = document.querySelector(`#canvas .card[data-id="${c.id}"]`);
+      if (el) { el.style.left = c.left; el.style.top = c.top; if (c.zIndex) el.style.zIndex = c.zIndex; }
+    });
+  }
+  if (layout.gcards) {
+    layout.gcards.forEach(c => {
+      const el = document.querySelector(`.grouped-canvas .gcard[data-id="${c.id}"]`);
+      if (el) { el.style.left = c.left; el.style.top = c.top; }
+    });
+  }
+}
+
+// Auto-init Drive on page load
+window.addEventListener('load', () => setTimeout(gdriveInit, 500));
+
+function downloadApp(){
+  const html=`<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>Dynamic Range Plan</title>\n<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">\n<style>${document.querySelector('style').textContent}<\/style>\n</head>\n<body>\n${document.getElementById('app').outerHTML}\n${document.querySelector('.ctxmenu').outerHTML}\n${document.querySelector('.doverlay').outerHTML}\n${document.querySelector('.soverlay').outerHTML}\n
+<div class="tc" id="tc"></div>\n<script>${document.querySelector('script').textContent}<\/script>\n</body>\n</html>`;
+  const a=document.createElement('a');a.href='data:text/html;charset=utf-8,'+encodeURIComponent(html);a.download='dynamic-range-plan.html';a.click();
+}
+</script>
